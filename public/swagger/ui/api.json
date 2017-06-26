@@ -1,0 +1,1426 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "",
+    "version": "0.1.0",
+    "title": "Sm4sh Calculator API"
+  },
+  "host": "calculator.kuroganehammer.com",
+  "basePath": "/api/",
+  "tags": [
+    {
+      "name": "Characters",
+      "description": "Get character names and IDs used by the calculator"
+    },
+    {
+      "name": "Moves",
+      "description": "Get KH API move data parsed by the calculator"
+    },
+    {
+      "name": "Stages",
+      "description": "Get stages names and data used by the calculator"
+    },
+    {
+      "name": "Calculations",
+      "description": "Process data using Sm4sh Calculator"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/calculate/kb": {
+      "post": {
+        "tags": [
+          "Calculations"
+        ],
+        "summary": "Calculate KB and distance launched",
+        "description": "",
+        "operationId": "calculateKB",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Data"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "schema": {
+              "$ref": "#/definitions/KB_Response"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/calculate/percentfromkb": {
+      "post": {
+        "tags": [
+          "Calculations"
+        ],
+        "summary": "Calculate percent target must have to get specific KB",
+        "description": "",
+        "operationId": "calculatePercentFromKB",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PercentFromKBData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "schema": {
+              "$ref": "#/definitions/Percent_Response"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/calculate/kopercent": {
+      "post": {
+        "tags": [
+          "Calculations"
+        ],
+        "summary": "Calculate percent the target must have to get KO'd",
+        "description": "",
+        "operationId": "calculateKOPercent",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Data"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "schema": {
+              "$ref": "#/definitions/KO_Response"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/calculate/kopercent/bestdi": {
+      "post": {
+        "tags": [
+          "Calculations"
+        ],
+        "summary": "Calculate percent and best di angle the target must have to get KO'd",
+        "description": "",
+        "operationId": "calculateBestDIKOPercent",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BestDIData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "schema": {
+              "$ref": "#/definitions/BestDI_KO_Response"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/characters": {
+      "get": {
+        "tags": [
+          "Characters"
+        ],
+        "summary": "Get character names and IDs used by the calculator",
+        "description": "",
+        "operationId": "getCharactersWithIDs",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CharacterId"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/characters/names": {
+      "get": {
+        "tags": [
+          "Characters"
+        ],
+        "summary": "Get character names",
+        "description": "",
+        "operationId": "getCharactersNames",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character names list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/stages": {
+      "get": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Get legal stage data",
+        "description": "",
+        "operationId": "getStages",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Stages data",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StageData"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/stages/names": {
+      "get": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Get stages names that the calculator can use",
+        "description": "",
+        "operationId": "getStagesNames",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Stages names list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/moves/{characterName}": {
+      "get": {
+        "tags": [
+          "Moves"
+        ],
+        "summary": "Get character list of moves",
+        "description": "",
+        "operationId": "getCharacterMoves",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "characterName",
+            "type": "string",
+            "description": "Character's name",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character moves list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MoveData"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/moves/{characterName}/names": {
+      "get": {
+        "tags": [
+          "Moves"
+        ],
+        "summary": "Get character list of moves names",
+        "description": "",
+        "operationId": "getCharacterMovesNames",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "characterName",
+            "type": "string",
+            "description": "Character's name",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character moves list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/moves/id/{moveId}": {
+      "get": {
+        "tags": [
+          "Moves"
+        ],
+        "summary": "Get move data based on KH API move id",
+        "description": "",
+        "operationId": "getMoveById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "moveId",
+            "type": "number",
+            "format": "int",
+            "description": "KH API move id",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Parsed move data",
+            "schema": {
+              "$ref": "#/definitions/MoveData"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Data": {
+      "type": "object",
+      "properties": {
+        "attacker": {
+          "type": "object",
+          "$ref": "#/definitions/Attacker"
+        },
+        "target": {
+          "type": "object",
+          "$ref": "#/definitions/Target"
+        },
+        "attack": {
+          "type": "object",
+          "$ref": "#/definitions/Attack"
+        },
+        "modifiers": {
+          "type": "object",
+          "$ref": "#/definitions/Modifiers"
+        },
+        "shield_advantage": {
+          "type": "object",
+          "$ref": "#/definitions/ShieldAdvantage"
+        },
+        "stage": {
+          "type": "object",
+          "$ref": "#/definitions/Stage"
+        },
+        "vs_mode": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PercentFromKBData": {
+      "type": "object",
+      "properties": {
+        "attacker": {
+          "type": "object",
+          "$ref": "#/definitions/Attacker"
+        },
+        "target": {
+          "type": "object",
+          "$ref": "#/definitions/Target"
+        },
+        "attack": {
+          "type": "object",
+          "$ref": "#/definitions/Attack"
+        },
+        "modifiers": {
+          "type": "object",
+          "$ref": "#/definitions/Modifiers"
+        },
+        "shield_advantage": {
+          "type": "object",
+          "$ref": "#/definitions/ShieldAdvantage"
+        },
+        "stage": {
+          "type": "object",
+          "$ref": "#/definitions/Stage"
+        },
+        "vs_mode": {
+          "type": "boolean"
+        },
+        "kb": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "BestDIData": {
+      "type": "object",
+      "properties": {
+        "attacker": {
+          "type": "object",
+          "$ref": "#/definitions/Attacker"
+        },
+        "target": {
+          "type": "object",
+          "$ref": "#/definitions/Target"
+        },
+        "attack": {
+          "type": "object",
+          "$ref": "#/definitions/Attack"
+        },
+        "modifiers": {
+          "type": "object",
+          "$ref": "#/definitions/Modifiers"
+        },
+        "shield_advantage": {
+          "type": "object",
+          "$ref": "#/definitions/ShieldAdvantage"
+        },
+        "stage": {
+          "type": "object",
+          "$ref": "#/definitions/Stage"
+        },
+        "vs_mode": {
+          "type": "boolean"
+        },
+        "di_start": {
+          "type": "number",
+          "format": "float",
+          "default": 0,
+          "description": "Start of the di iterator (inclusive)"
+        },
+        "di_end": {
+          "type": "number",
+          "format": "float",
+          "default": 360,
+          "description": "End of the di iterator (exclusive)"
+        },
+        "di_step": {
+          "type": "number",
+          "format": "float",
+          "default": 30,
+          "description": "Step used on the iterator for di angles (min: 1, max: 90)"
+        }
+      }
+    },
+    "Attacker": {
+      "type": "object",
+      "description": "Attacker character, character or character_id are required",
+      "properties": {
+        "character": {
+          "type": "string"
+        },
+        "character_id": {
+          "type": "number",
+          "format": "int"
+        },
+        "modifier": {
+          "type": "string",
+          "description": "Attribute modifier the character has (Monado Arts, Limit Break, Deep Breathing)"
+        },
+        "percent": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_dealt": {
+          "type": "number",
+          "format": "float"
+        },
+        "damage_dealt": {
+          "type": "number",
+          "format": "float"
+        },
+        "aura": {
+          "type": "object",
+          "$ref": "#/definitions/Aura"
+        }
+      }
+    },
+    "Aura": {
+      "type": "object",
+      "properties": {
+        "stock_dif": {
+          "type": "string",
+          "description": "+2,+1,0,-1,-2"
+        },
+        "game_mode": {
+          "type": "string",
+          "description": "Singles,Doubles"
+        }
+      }
+    },
+    "Target": {
+      "type": "object",
+      "description": "Target character, character or character_id are required",
+      "properties": {
+        "character": {
+          "type": "string"
+        },
+        "character_id": {
+          "type": "number",
+          "format": "int"
+        },
+        "modifier": {
+          "type": "string",
+          "description": "Attribute modifier the character has (Monado Arts, Limit Break, Deep Breathing)"
+        },
+        "percent": {
+          "type": "number",
+          "format": "float",
+          "default": 0
+        },
+        "kb_received": {
+          "type": "number",
+          "format": "float"
+        },
+        "damage_taken": {
+          "type": "number",
+          "format": "float"
+        },
+        "gravity": {
+          "type": "number",
+          "format": "float"
+        },
+        "fall_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "traction": {
+          "type": "number",
+          "format": "float"
+        },
+        "luma_percent": {
+          "type": "number",
+          "format": "float",
+          "default": 0
+        }
+      }
+    },
+    "Attack": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the move, if null or undefined it requires bkb,kbg,wbkb,angle and damage to be set"
+        },
+        "damage": {
+          "type": "number",
+          "format": "float"
+        },
+        "hitlag": {
+          "type": "number",
+          "format": "float"
+        },
+        "angle": {
+          "type": "number",
+          "format": "int"
+        },
+        "bkb": {
+          "type": "number",
+          "format": "int"
+        },
+        "wbkb": {
+          "type": "number",
+          "format": "int"
+        },
+        "kbg": {
+          "type": "number",
+          "format": "int"
+        },
+        "shield_damage": {
+          "type": "number",
+          "format": "int",
+          "default": 0
+        },
+        "preLaunchDamage": {
+          "type": "number",
+          "format": "float",
+          "description": "Used on throws, damage made by an attack before launching",
+          "default": 0
+        },
+        "is_smash_attack": {
+          "type": "boolean",
+          "default": false
+        },
+        "charged_frames": {
+          "type": "number",
+          "format": "int",
+          "default": 0
+        },
+        "windbox": {
+          "type": "boolean",
+          "default": false
+        },
+        "projectile": {
+          "type": "boolean",
+          "default": false
+        },
+        "set_weight": {
+          "type": "boolean",
+          "default": false
+        },
+        "paralyzer": {
+          "type": "boolean",
+          "default": false
+        },
+        "aerial_opponent": {
+          "type": "boolean",
+          "default": false
+        },
+        "ignore_staleness": {
+          "type": "boolean",
+          "default": false
+        },
+        "mega_man_fsmash": {
+          "type": "boolean",
+          "default": false
+        },
+        "on_witch_time": {
+          "type": "boolean",
+          "default": false
+        },
+        "unblockable": {
+          "type": "boolean",
+          "default": false
+        },
+        "stale_queue": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "Modifiers": {
+      "type": "object",
+      "properties": {
+        "di": {
+          "type": "number",
+          "format": "int"
+        },
+        "no_di": {
+          "type": "boolean",
+          "default": false,
+          "description": "false is default when di is given, if di is undefined or null it is true"
+        },
+        "launch_rate": {
+          "type": "number",
+          "format": "float",
+          "default": 1
+        },
+        "grounded_meteor": {
+          "type": "boolean",
+          "default": false
+        },
+        "electric_attack": {
+          "type": "boolean",
+          "default": false
+        },
+        "crouch_cancel": {
+          "type": "boolean",
+          "default": false
+        },
+        "interrupted_smash_charge": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "ShieldAdvantage": {
+      "type": "object",
+      "description": "Shield advantage calculation will be omitted if hit_frame or faf are null when not getting an attack by it's name",
+      "properties": {
+        "hit_frame": {
+          "type": "number",
+          "format": "int",
+          "description": "Frame opponent is hit, if not defined or null it will use attack's first active frame"
+        },
+        "faf": {
+          "type": "number",
+          "format": "int",
+          "description": "First Actionable Frame, if not defined or null it will use attack's faf"
+        },
+        "powershield": {
+          "type": "boolean",
+          "default": false
+        },
+        "use_landing_lag": {
+          "type": "boolean",
+          "default": false
+        },
+        "use_autocancel": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "Stage": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Required on KO Percent calculation when not giving stage_data manually"
+        },
+        "stage_data": {
+          "type": "object",
+          "$ref": "#/definitions/StageData",
+          "default": null,
+          "description": "Manually give stage collisions and blast zones data, this will be ignored when stage name is given"
+        },
+        "position": {
+          "type": "object",
+          "$ref": "#/definitions/Point"
+        },
+        "inverse_x": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Speed": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "KB_Response": {
+      "type": "object",
+      "properties": {
+        "damage": {
+          "type": "number",
+          "format": "float"
+        },
+        "attacker_hitlag": {
+          "type": "number",
+          "format": "int"
+        },
+        "target_hitlag": {
+          "type": "number",
+          "format": "int"
+        },
+        "paralysis_time": {
+          "type": "number",
+          "format": "int"
+        },
+        "kb": {
+          "type": "number",
+          "format": "float"
+        },
+        "angke_with_di": {
+          "type": "number",
+          "format": "float"
+        },
+        "launch_angle": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_x": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_y": {
+          "type": "number",
+          "format": "float"
+        },
+        "hitstun": {
+          "type": "number",
+          "format": "int"
+        },
+        "hitstun_faf": {
+          "type": "number",
+          "format": "int"
+        },
+        "airdodge_hitstun_cancel": {
+          "type": "number",
+          "format": "int"
+        },
+        "aerial_hitstun_cancel": {
+          "type": "number",
+          "format": "int"
+        },
+        "tumble": {
+          "type": "boolean"
+        },
+        "reeling": {
+          "type": "boolean"
+        },
+        "reeling_hitstun": {
+          "type": "number",
+          "format": "int"
+        },
+        "reeling_faf": {
+          "type": "number",
+          "format": "int"
+        },
+        "can_jab_lock": {
+          "type": "boolean"
+        },
+        "lsi": {
+          "type": "number",
+          "format": "float"
+        },
+        "horizontal_launch_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "gravity_boost": {
+          "type": "number",
+          "format": "float"
+        },
+        "vertical_launch_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "max_horizontal_distance": {
+          "type": "number",
+          "format": "float"
+        },
+        "max_vertical_distance": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_modifier": {
+          "type": "number",
+          "format": "float"
+        },
+        "rage": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_received": {
+          "type": "number",
+          "format": "float"
+        },
+        "launch_rate": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_dealt": {
+          "type": "number",
+          "format": "float"
+        },
+        "aura": {
+          "type": "number",
+          "format": "float"
+        },
+        "charged_smash_damage_multiplier": {
+          "type": "number",
+          "format": "float"
+        },
+        "damage_taken": {
+          "type": "number",
+          "format": "float"
+        },
+        "damage_dealt": {
+          "type": "number",
+          "format": "float"
+        },
+        "preLaunchDamage": {
+          "type": "number",
+          "format": "float"
+        },
+        "stale_negation": {
+          "type": "number",
+          "format": "float"
+        },
+        "hit_advantage": {
+          "type": "number",
+          "format": "float"
+        },
+        "unblockable": {
+          "type": "boolean"
+        },
+        "shield_damage": {
+          "type": "number",
+          "format": "float"
+        },
+        "full_shield_hp": {
+          "type": "number",
+          "format": "float"
+        },
+        "shield_break": {
+          "type": "boolean"
+        },
+        "shield_hitlag": {
+          "type": "number",
+          "format": "int"
+        },
+        "shield_stun": {
+          "type": "number",
+          "format": "int"
+        },
+        "shield_advantage": {
+          "type": "number",
+          "format": "int"
+        },
+        "luma_kb": {
+          "type": "number",
+          "format": "float"
+        },
+        "luma_launched": {
+          "type": "boolean"
+        },
+        "ko": {
+          "type": "boolean"
+        },
+        "ko_frame": {
+          "type": "number",
+          "format": "int"
+        },
+        "launch_trajectory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LaunchFrame"
+          }
+        }
+      }
+    },
+    "LaunchFrame": {
+      "type": "object",
+      "properties": {
+        "frame": {
+          "type": "number",
+          "format": "int"
+        },
+        "position": {
+          "type": "object",
+          "$ref": "#/definitions/Point"
+        },
+        "launch_speed": {
+          "type": "object",
+          "$ref": "#/definitions/Speed"
+        }
+      }
+    },
+    "Percent_Response": {
+      "type": "object",
+      "description": "When move's WBKB is 0, percent will have the percent the opponent must have to get given KB and all other values will be null. When WBKB isn't 0, percent will be null and all other values will have data",
+      "properties": {
+        "percent": {
+          "type": "number",
+          "format": "float"
+        },
+        "attacker_percent": {
+          "type": "number",
+          "format": "float"
+        },
+        "rage_multiplier": {
+          "type": "number",
+          "format": "float"
+        },
+        "min_kb": {
+          "type": "number",
+          "format": "float"
+        },
+        "max_kb": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "KO_Response": {
+      "type": "object",
+      "properties": {
+        "ko_percent": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "BestDI_KO_Response": {
+      "type": "object",
+      "properties": {
+        "best_di": {
+          "type": "number",
+          "format": "float"
+        },
+        "ko_percent": {
+          "type": "number",
+          "format": "float"
+        },
+        "calculations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KO_Calculation"
+          }
+        }
+      }
+    },
+    "KO_Calculation": {
+      "type": "object",
+      "properties": {
+        "di_angle": {
+          "type": "number",
+          "format": "float"
+        },
+        "ko_percent": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "StageData": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "collisions": {
+          "type": "object",
+          "$ref": "#/definitions/Collision"
+        },
+        "platforms": {
+          "type": "object",
+          "$ref": "#/definitions/Collision"
+        },
+        "materials": {
+          "type": "object",
+          "$ref": "#/definitions/Material"
+        },
+        "blast_zones": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "camera": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "center": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "spawns": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        }
+      }
+    },
+    "Collision": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "vertex": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        }
+      }
+    },
+    "Material": {
+      "type": "object",
+      "properties": {
+        "leftLedge": {
+          "type": "boolean"
+        },
+        "rightLedge": {
+          "type": "boolean"
+        },
+        "noWallJump": {
+          "type": "boolean"
+        },
+        "passthroughAngle": {
+          "type": "number",
+          "format": "int"
+        },
+        "length": {
+          "type": "number",
+          "format": "float"
+        },
+        "ceiling": {
+          "type": "boolean"
+        },
+        "wall": {
+          "type": "boolean"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "CharacterId": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "number",
+          "format": "int"
+        }
+      }
+    },
+    "MoveData": {
+      "type": "object",
+      "properties": {
+        "api_id": {
+          "description": "Move id from KH API",
+          "type": "number",
+          "format": "int"
+        },
+        "id": {
+          "type": "number",
+          "format": "int"
+        },
+        "hitbox_no": {
+          "type": "number",
+          "format": "int",
+          "description": "Hitbox id"
+        },
+        "name": {
+          "type": "string",
+          "description": "Moves name with hitbox id"
+        },
+        "moveName": {
+          "type": "string"
+        },
+        "base_damage": {
+          "type": "number",
+          "format": "float"
+        },
+        "angle": {
+          "type": "number",
+          "format": "int"
+        },
+        "bkb": {
+          "type": "number",
+          "format": "int"
+        },
+        "kbg": {
+          "type": "number",
+          "format": "int"
+        },
+        "wbkb": {
+          "type": "number",
+          "format": "int"
+        },
+        "hitboxActive": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ActiveFrames"
+          }
+        },
+        "faf": {
+          "type": "number",
+          "format": "int"
+        },
+        "landingLag": {
+          "type": "number",
+          "format": "int",
+          "default": null
+        },
+        "autoCancel": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AutoCancel"
+          }
+        },
+        "preLaunchDamage": {
+          "type": "number",
+          "format": "float"
+        },
+        "counterMult": {
+          "type": "number",
+          "format": "float"
+        },
+        "rehitRate": {
+          "type": "number",
+          "format": "int"
+        },
+        "shieldDamage": {
+          "type": "number",
+          "format": "int"
+        },
+        "smash_attack": {
+          "type": "boolean"
+        },
+        "throw": {
+          "type": "boolean"
+        },
+        "chargeable": {
+          "type": "boolean"
+        },
+        "grab": {
+          "type": "boolean"
+        },
+        "tilt": {
+          "type": "boolean"
+        },
+        "jab": {
+          "type": "boolean"
+        },
+        "aerial": {
+          "type": "boolean"
+        },
+        "taunt": {
+          "type": "boolean"
+        },
+        "dashAttack": {
+          "type": "boolean"
+        },
+        "counter": {
+          "type": "boolean"
+        },
+        "unblockable": {
+          "type": "boolean"
+        },
+        "windbox": {
+          "type": "boolean"
+        },
+        "multihit": {
+          "type": "boolean"
+        },
+        "spike": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "ActiveFrames": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "number",
+          "format": "int"
+        },
+        "end": {
+          "type": "number",
+          "format": "int"
+        }
+      }
+    },
+    "AutoCancel": {
+      "type": "object",
+      "properties": {
+        "rawValue": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "int",
+          "default": null
+        },
+        "values": {
+          "type": "array",
+          "default": null,
+          "items": {
+            "type": "number",
+            "format": "int"
+          }
+        }
+      }
+    }
+  }
+}

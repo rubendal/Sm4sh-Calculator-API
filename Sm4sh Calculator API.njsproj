@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>Sm4sh Calculator API</Name>
+    <RootNamespace>Sm4sh Calculator API</RootNamespace>
+    <Environment>
+    </Environment>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>818f30a9-cae3-49f0-a439-abce0e6480ba</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>app.js</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <NodejsPort>80</NodejsPort>
+    <StartWebBrowser>True</StartWebBrowser>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="app.js" />
+    <Compile Include="calculator\global.js" />
+    <Compile Include="calculator\khapi.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="public\swagger\ui\swagger-ui-bundle.js" />
+    <Compile Include="public\swagger\ui\swagger-ui-standalone-preset.js" />
+    <Compile Include="public\swagger\ui\swagger-ui.js" />
+    <Compile Include="routes\index.js" />
+    <Content Include="Data\Bayonetta\attributes.json" />
+    <Content Include="Data\Bowser Jr\attributes.json" />
+    <Content Include="Data\Bowser\attributes.json" />
+    <Content Include="Data\Captain Falcon\attributes.json" />
+    <Content Include="Data\characters.json" />
+    <Content Include="Data\Charizard\attributes.json" />
+    <Content Include="Data\Cloud\attributes.json" />
+    <Content Include="Data\Corrin\attributes.json" />
+    <Content Include="Data\Dark Pit\attributes.json" />
+    <Content Include="Data\Diddy Kong\attributes.json" />
+    <Content Include="Data\Donkey Kong\attributes.json" />
+    <Content Include="Data\Dr. Mario\attributes.json" />
+    <Content Include="Data\Duck Hunt\attributes.json" />
+    <Content Include="Data\Falco\attributes.json" />
+    <Content Include="Data\Fox\attributes.json" />
+    <Content Include="Data\Game And Watch\attributes.json" />
+    <Content Include="Data\Ganondorf\attributes.json" />
+    <Content Include="Data\Greninja\attributes.json" />
+    <Content Include="Data\Ike\attributes.json" />
+    <Content Include="Data\Jigglypuff\attributes.json" />
+    <Content Include="Data\King Dedede\attributes.json" />
+    <Content Include="Data\Kirby\attributes.json" />
+    <Content Include="Data\Link\attributes.json" />
+    <Content Include="Data\Little Mac\attributes.json" />
+    <Content Include="Data\Lucario\attributes.json" />
+    <Content Include="Data\Lucas\attributes.json" />
+    <Content Include="Data\Lucina\attributes.json" />
+    <Content Include="Data\Luigi\attributes.json" />
+    <Content Include="Data\Mario\attributes.json" />
+    <Content Include="Data\Marth\attributes.json" />
+    <Content Include="Data\Mega Man\attributes.json" />
+    <Content Include="Data\Meta Knight\attributes.json" />
+    <Content Include="Data\Mewtwo\attributes.json" />
+    <Content Include="Data\Mii Brawler\attributes.json" />
+    <Content Include="Data\Mii Gunner\attributes.json" />
+    <Content Include="Data\Mii Swordfighter\attributes.json" />
+    <Content Include="Data\Ness\attributes.json" />
+    <Content Include="Data\Olimar\attributes.json" />
+    <Content Include="Data\PAC-MAN\attributes.json" />
+    <Content Include="Data\Palutena\attributes.json" />
+    <Content Include="Data\Peach\attributes.json" />
+    <Content Include="Data\Pikachu\attributes.json" />
+    <Content Include="Data\Pit\attributes.json" />
+    <Content Include="Data\R.O.B\attributes.json" />
+    <Content Include="Data\Robin\attributes.json" />
+    <Content Include="Data\Rosalina And Luma\attributes.json" />
+    <Content Include="Data\Roy\attributes.json" />
+    <Content Include="Data\Ryu\attributes.json" />
+    <Content Include="Data\Samus\attributes.json" />
+    <Content Include="Data\Sheik\attributes.json" />
+    <Content Include="Data\Shulk\attributes.json" />
+    <Content Include="Data\Sonic\attributes.json" />
+    <Content Include="Data\Stages\allstagedata.json" />
+    <Content Include="Data\Stages\legalstagedata.json" />
+    <Content Include="Data\Toon Link\attributes.json" />
+    <Content Include="Data\Villager\attributes.json" />
+    <Content Include="Data\Wario\attributes.json" />
+    <Content Include="Data\Wii Fit Trainer\attributes.json" />
+    <Content Include="Data\Yoshi\attributes.json" />
+    <Content Include="Data\Zelda\attributes.json" />
+    <Content Include="Data\Zero Suit Samus\attributes.json" />
+    <Content Include="package.json" />
+    <Content Include="public\stylesheets\main.css" />
+    <Content Include="public\swagger\ui\api.json" />
+    <Content Include="public\swagger\ui\favicon-16x16.png" />
+    <Content Include="public\swagger\ui\favicon-32x32.png" />
+    <Content Include="public\swagger\ui\index.html" />
+    <Content Include="public\swagger\ui\swagger-ui-bundle.js.map" />
+    <Content Include="public\swagger\ui\swagger-ui-standalone-preset.js.map" />
+    <Content Include="public\swagger\ui\swagger-ui.css" />
+    <Content Include="public\swagger\ui\swagger-ui.css.map" />
+    <Content Include="public\swagger\ui\swagger-ui.js.map" />
+    <Content Include="README.md" />
+    <Content Include="views\index.pug" />
+    <Content Include="views\layout.pug" />
+    <Content Include="views\error.pug" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="calculator\" />
+    <Folder Include="Data\" />
+    <Folder Include="Data\Bayonetta\" />
+    <Folder Include="Data\Bowser Jr\" />
+    <Folder Include="Data\Bowser\" />
+    <Folder Include="Data\Captain Falcon\" />
+    <Folder Include="Data\Charizard\" />
+    <Folder Include="Data\Cloud\" />
+    <Folder Include="Data\Corrin\" />
+    <Folder Include="Data\Dark Pit\" />
+    <Folder Include="Data\Diddy Kong\" />
+    <Folder Include="Data\Donkey Kong\" />
+    <Folder Include="Data\Dr. Mario\" />
+    <Folder Include="Data\Duck Hunt\" />
+    <Folder Include="Data\Falco\" />
+    <Folder Include="Data\Fox\" />
+    <Folder Include="Data\Game And Watch\" />
+    <Folder Include="Data\Ganondorf\" />
+    <Folder Include="Data\Greninja\" />
+    <Folder Include="Data\Ike\" />
+    <Folder Include="Data\Jigglypuff\" />
+    <Folder Include="Data\King Dedede\" />
+    <Folder Include="Data\Kirby\" />
+    <Folder Include="Data\Link\" />
+    <Folder Include="Data\Little Mac\" />
+    <Folder Include="Data\Lucario\" />
+    <Folder Include="Data\Lucas\" />
+    <Folder Include="Data\Lucina\" />
+    <Folder Include="Data\Luigi\" />
+    <Folder Include="Data\Mario\" />
+    <Folder Include="Data\Marth\" />
+    <Folder Include="Data\Mega Man\" />
+    <Folder Include="Data\Meta Knight\" />
+    <Folder Include="Data\Mewtwo\" />
+    <Folder Include="Data\Mii Brawler\" />
+    <Folder Include="Data\Mii Gunner\" />
+    <Folder Include="Data\Mii Swordfighter\" />
+    <Folder Include="Data\Ness\" />
+    <Folder Include="Data\Olimar\" />
+    <Folder Include="Data\PAC-MAN\" />
+    <Folder Include="Data\Palutena\" />
+    <Folder Include="Data\Peach\" />
+    <Folder Include="Data\Pikachu\" />
+    <Folder Include="Data\Pit\" />
+    <Folder Include="Data\R.O.B\" />
+    <Folder Include="Data\Robin\" />
+    <Folder Include="Data\Rosalina And Luma\" />
+    <Folder Include="Data\Roy\" />
+    <Folder Include="Data\Ryu\" />
+    <Folder Include="Data\Samus\" />
+    <Folder Include="Data\Sheik\" />
+    <Folder Include="Data\Shulk\" />
+    <Folder Include="Data\Sonic\" />
+    <Folder Include="Data\Stages\" />
+    <Folder Include="Data\Toon Link\" />
+    <Folder Include="Data\Villager\" />
+    <Folder Include="Data\Wario\" />
+    <Folder Include="Data\Wii Fit Trainer\" />
+    <Folder Include="Data\Yoshi\" />
+    <Folder Include="Data\Zelda\" />
+    <Folder Include="Data\Zero Suit Samus\" />
+    <Folder Include="public\" />
+    <Folder Include="public\stylesheets\" />
+    <Folder Include="public\swagger\" />
+    <Folder Include="public\swagger\ui\" />
+    <Folder Include="routes\" />
+    <Folder Include="views\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Web.config" />
+    <Content Include="Web.Debug.config" />
+  </ItemGroup>
+  <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsTools.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:48022/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
