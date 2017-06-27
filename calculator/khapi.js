@@ -346,8 +346,9 @@ class MoveParser {
 					start = "0";
 				}
 				if (end == undefined) {
-					end = "0";
+					end = start;
 				}
+
 				result.push(new HitboxActiveFrames(parseFloat(start), parseFloat(end)));
 			}
 			return result;
@@ -619,54 +620,96 @@ function getMoveset(name, callback) {
 	var id = getCharacterIdFromKH(name);
 	if (id == -1) {
 		callback(null);
-	}
-	var http = require('http');
-	var options = {
-		host: 'api.kuroganehammer.com',
-		path: '/api/Characters/' + id + "/moves",
-		method: 'GET'
-	};
+	} else {
+		var http = require('http');
+		var options = {
+			host: 'api.kuroganehammer.com',
+			path: '/api/Characters/' + id + "/moves",
+			method: 'GET'
+		};
 
-	var moves = null;
+		var moves = null;
 
-	var req = http.request(options, function (res) {
-		var json = "";
-		res.setEncoding('utf8');
-		res.on('data', function (data) {
-			json += data;
-		});
-		res.on('end', function () {
-			try {
-				var moveset = JSON.parse(json);
-				moves = [];
-				var count = 1;
-				for (var i = 0; i < moveset.length; i++) {
-					var move = moveset[i];
-					var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
-					for (var c = 0; c < parser.moves.length; c++) {
-						var m = parser.moves[c];
-						m.id = count;
-						if (!m.grab && m.valid) {
-							delete m.valid;
-							moves.push(m);
-							count++;
+		var req = http.request(options, function (res) {
+			var json = "";
+			res.setEncoding('utf8');
+			res.on('data', function (data) {
+				json += data;
+			});
+			res.on('end', function () {
+				try {
+					var moveset = JSON.parse(json);
+
+					//Error message from API
+					if (typeof moveset.message != "undefined") {
+						callback(null);
+					} else {
+
+						moves = [];
+						var count = 1;
+						for (var i = 0; i < moveset.length; i++) {
+							var move = moveset[i];
+							var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+							for (var c = 0; c < parser.moves.length; c++) {
+								var m = parser.moves[c];
+								m.id = count;
+								if (!m.grab && m.valid) {
+									delete m.valid;
+									moves.push(m);
+									count++;
+								}
+							}
 						}
+
+						callback(moves);
+					}
+
+				} catch (e) {
+					moves = null;
+					callback(moves);
+				}
+			});
+		}).on('error', function (err) {
+			moves = null;
+			callback(moves);
+		});
+
+		req.setTimeout(10000, function () {
+			req.abort();
+		});
+
+		req.end();
+	}
+}
+
+function getMovesetFromLocalFiles(name, callback) {
+	var id = getCharacterIdFromKH(name);
+	if (id == -1) {
+		callback(null);
+	} else {
+		try {
+			var moves = [];
+			var moveset = require("../Data/KHAPI Local/" + id + "/moves");
+			var count = 1;
+			for (var i = 0; i < moveset.length; i++) {
+				var move = moveset[i];
+				var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+				for (var c = 0; c < parser.moves.length; c++) {
+					var m = parser.moves[c];
+					m.id = count;
+					if (!m.grab && m.valid) {
+						delete m.valid;
+						moves.push(m);
+						count++;
 					}
 				}
-
-				callback(moves);
-
-			} catch (e) {
-				moves = null;
-				callback(moves);
 			}
-		});
-	}).on('error', function (err) {
-		moves = null;
-		callback(moves);
-		});
 
-	req.end();
+			callback(moves);
+		} catch (err) {
+			callback(null);
+		}
+	}
 }
 
 function getMove(id, callback) {
@@ -688,19 +731,26 @@ function getMove(id, callback) {
 		res.on('end', function () {
 			try {
 				var move = JSON.parse(json);
-				moves = [];
-				var count = 1;
-				var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
-				for (var c = 0; c < parser.moves.length; c++) {
-					var m = parser.moves[c];
-					m.id = count;
-					if (!m.grab && m.valid) {
-						delete m.valid;
-						moves.push(m);
-						count++;
+
+				//Error message from API
+				if (typeof move.message != "undefined") {
+					callback(null);
+				} else {
+
+					moves = [];
+					var count = 1;
+					var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+					for (var c = 0; c < parser.moves.length; c++) {
+						var m = parser.moves[c];
+						m.id = count;
+						if (!m.grab && m.valid) {
+							delete m.valid;
+							moves.push(m);
+							count++;
+						}
 					}
+					callback(moves);
 				}
-				callback(moves);
 
 			} catch (e) {
 				moves = null;
@@ -710,6 +760,10 @@ function getMove(id, callback) {
 	}).on('error', function (err) {
 		moves = null;
 		callback(moves);
+		});
+
+	req.setTimeout(10000, function () {
+		req.abort();
 	});
 
 	req.end();
@@ -732,3 +786,4 @@ exports.names = names;
 exports.KHcharacters = KHcharacters;
 exports.getMoveset = getMoveset;
 exports.getMove = getMove;
+exports.getMovesetFromLocalFiles = getMovesetFromLocalFiles;

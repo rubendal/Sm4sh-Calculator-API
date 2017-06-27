@@ -148,33 +148,46 @@ router.get('/moves/:name/names', function (req, res) {
 			}
 			res.json(names);
 		} else {
-			res.status(500).json({
-				message: "Error: Move not found or KH API isn't available"
+			kh.getMovesetFromLocalFiles(character.api_name, function (localData) {
+				if (localData != null) {
+					var names = [];
+					for (var i = 0; i < localData.length; i++) {
+						names.push(localData[i].name);
+					}
+					res.json(names);
+				} else {
+					res.status(500).json({
+						message: "Error: Invalid character"
+					});
+				}
 			});
 		}
 	});
 });
 
 router.get('/moves/:name', function (req, res) {
-	try {
-		var character = new global.Character(req.params.name);
-		kh.getMoveset(character.api_name, function (data) {
-			if (data != null) {
-				for (var i = 0; i < data.length; i++) {
-					delete data[i].charge;
-				}
-				res.json(data);
-			} else {
-				res.status(500).json({
-					message: "Error: Invalid character or KH API isn't available"
-				});
+	var character = new global.Character(req.params.name);
+	kh.getMoveset(character.api_name, function (data) {
+		if (data != null) {
+			for (var i = 0; i < data.length; i++) {
+				delete data[i].charge;
 			}
-		});
-	} catch (err) {
-		res.status(500).json({
-			message: "Error: Invalid character or KH API isn't available"
-		});
-	}
+			res.json(data);
+		} else {
+			kh.getMovesetFromLocalFiles(character.api_name, function (localData) {
+				if (localData != null) {
+					for (var i = 0; i < localData.length; i++) {
+						delete localData[i].charge;
+					}
+					res.json(localData);
+				} else {
+					res.status(500).json({
+						message: "Error: Invalid character"
+					});
+				}
+			});
+		}
+	});
 });
 
 router.get('/moves/id/:api_id', function (req, res) {
@@ -251,8 +264,44 @@ router.post('/calculate/kb', function (req, res) {
 					}
 					global.calculate(processedData, res);
 				} else {
-					res.status(500).json({
-						message: "Error: Move name not found or KH API isn't available"
+					kh.getMovesetFromLocalFiles(processedData.attacker.api_name, function (localData) {
+						if (localData != null) {
+							for (var i = 0; i < localData.length; i++) {
+								if (localData[i].name == processedData.attack.name) {
+									processedData.attack.base_damage = localData[i].base_damage;
+									processedData.attack.angle = localData[i].angle;
+									processedData.attack.bkb = localData[i].bkb;
+									processedData.attack.wbkb = localData[i].wbkb;
+									processedData.attack.kbg = localData[i].kbg;
+									processedData.attack.shield_damage = localData[i].shieldDamage;
+									processedData.attack.preLaunchDamage = localData[i].preLaunchDamage;
+									if (isNaN(processedData.attack.preLaunchDamage)) {
+										processedData.attack.preLaunchDamage = 0;
+									}
+									processedData.attack.is_smash_attack = localData[i].smash_attack;
+									processedData.attack.chargeable = localData[i].chargeable;
+									processedData.attack.charge = localData[i].charge;
+									processedData.attack.unblockable = localData[i].unblockable;
+									processedData.attack.windbox = localData[i].windbox;
+									processedData.attack.landingLag = localData[i].landingLag;
+									processedData.attack.autoCancel = localData[i].autoCancel;
+									if (processedData.shield_advantage.hit_frame == null) {
+										if (localData[i].hitboxActive.length > 0) {
+											processedData.shield_advantage.hit_frame = localData[i].hitboxActive[0].start;
+										}
+									}
+									if (processedData.shield_advantage.faf == null) {
+										processedData.shield_advantage.faf = localData[i].faf;
+									}
+									break;
+								}
+							}
+							global.calculate(processedData, res);
+						} else {
+							res.status(500).json({
+								message: "Error: Move name not found"
+							});
+						}
 					});
 				}
 			});
@@ -320,8 +369,44 @@ router.post('/calculate/percentfromkb', function (req, res) {
 					}
 					global.calculatePercentFromKB(processedData, res);
 				} else {
-					res.status(500).json({
-						message: "Error: Move name not found or KH API isn't available"
+					kh.getMovesetFromLocalFiles(processedData.attacker.api_name, function (localData) {
+						if (localData != null) {
+							for (var i = 0; i < localData.length; i++) {
+								if (localData[i].name == processedData.attack.name) {
+									processedData.attack.base_damage = localData[i].base_damage;
+									processedData.attack.angle = localData[i].angle;
+									processedData.attack.bkb = localData[i].bkb;
+									processedData.attack.wbkb = localData[i].wbkb;
+									processedData.attack.kbg = localData[i].kbg;
+									processedData.attack.shield_damage = localData[i].shieldDamage;
+									processedData.attack.preLaunchDamage = localData[i].preLaunchDamage;
+									if (isNaN(processedData.attack.preLaunchDamage)) {
+										processedData.attack.preLaunchDamage = 0;
+									}
+									processedData.attack.is_smash_attack = localData[i].smash_attack;
+									processedData.attack.chargeable = localData[i].chargeable;
+									processedData.attack.charge = localData[i].charge;
+									processedData.attack.unblockable = localData[i].unblockable;
+									processedData.attack.windbox = localData[i].windbox;
+									processedData.attack.landingLag = localData[i].landingLag;
+									processedData.attack.autoCancel = localData[i].autoCancel;
+									if (processedData.shield_advantage.hit_frame == null) {
+										if (localData[i].hitboxActive.length > 0) {
+											processedData.shield_advantage.hit_frame = localData[i].hitboxActive[0].start;
+										}
+									}
+									if (processedData.shield_advantage.faf == null) {
+										processedData.shield_advantage.faf = localData[i].faf;
+									}
+									break;
+								}
+							}
+							global.calculatePercentFromKB(processedData, res);
+						} else {
+							res.status(500).json({
+								message: "Error: Move name not found"
+							});
+						}
 					});
 				}
 			});
@@ -383,8 +468,44 @@ router.post('/calculate/kopercent', function (req, res) {
 					}
 					global.calculateKOPercent(processedData, res);
 				} else {
-					res.status(500).json({
-						message: "Error: Move name not found or KH API isn't available"
+					kh.getMovesetFromLocalFiles(processedData.attacker.api_name, function (localData) {
+						if (localData != null) {
+							for (var i = 0; i < localData.length; i++) {
+								if (localData[i].name == processedData.attack.name) {
+									processedData.attack.base_damage = localData[i].base_damage;
+									processedData.attack.angle = localData[i].angle;
+									processedData.attack.bkb = localData[i].bkb;
+									processedData.attack.wbkb = localData[i].wbkb;
+									processedData.attack.kbg = localData[i].kbg;
+									processedData.attack.shield_damage = localData[i].shieldDamage;
+									processedData.attack.preLaunchDamage = localData[i].preLaunchDamage;
+									if (isNaN(processedData.attack.preLaunchDamage)) {
+										processedData.attack.preLaunchDamage = 0;
+									}
+									processedData.attack.is_smash_attack = localData[i].smash_attack;
+									processedData.attack.chargeable = localData[i].chargeable;
+									processedData.attack.charge = localData[i].charge;
+									processedData.attack.unblockable = localData[i].unblockable;
+									processedData.attack.windbox = localData[i].windbox;
+									processedData.attack.landingLag = localData[i].landingLag;
+									processedData.attack.autoCancel = localData[i].autoCancel;
+									if (processedData.shield_advantage.hit_frame == null) {
+										if (localData[i].hitboxActive.length > 0) {
+											processedData.shield_advantage.hit_frame = localData[i].hitboxActive[0].start;
+										}
+									}
+									if (processedData.shield_advantage.faf == null) {
+										processedData.shield_advantage.faf = localData[i].faf;
+									}
+									break;
+								}
+							}
+							global.calculateKOPercent(processedData, res);
+						} else {
+							res.status(500).json({
+								message: "Error: Move name not found"
+							});
+						}
 					});
 				}
 			});
@@ -481,8 +602,44 @@ router.post('/calculate/kopercent/bestdi', function (req, res) {
 					}
 					global.calculateKOPercentBestDI(processedData, res);
 				} else {
-					res.status(500).json({
-						message: "Error: Move name not found or KH API isn't available"
+					kh.getMovesetFromLocalFiles(processedData.attacker.api_name, function (localData) {
+						if (localData != null) {
+							for (var i = 0; i < localData.length; i++) {
+								if (localData[i].name == processedData.attack.name) {
+									processedData.attack.base_damage = localData[i].base_damage;
+									processedData.attack.angle = localData[i].angle;
+									processedData.attack.bkb = localData[i].bkb;
+									processedData.attack.wbkb = localData[i].wbkb;
+									processedData.attack.kbg = localData[i].kbg;
+									processedData.attack.shield_damage = localData[i].shieldDamage;
+									processedData.attack.preLaunchDamage = localData[i].preLaunchDamage;
+									if (isNaN(processedData.attack.preLaunchDamage)) {
+										processedData.attack.preLaunchDamage = 0;
+									}
+									processedData.attack.is_smash_attack = localData[i].smash_attack;
+									processedData.attack.chargeable = localData[i].chargeable;
+									processedData.attack.charge = localData[i].charge;
+									processedData.attack.unblockable = localData[i].unblockable;
+									processedData.attack.windbox = localData[i].windbox;
+									processedData.attack.landingLag = localData[i].landingLag;
+									processedData.attack.autoCancel = localData[i].autoCancel;
+									if (processedData.shield_advantage.hit_frame == null) {
+										if (localData[i].hitboxActive.length > 0) {
+											processedData.shield_advantage.hit_frame = localData[i].hitboxActive[0].start;
+										}
+									}
+									if (processedData.shield_advantage.faf == null) {
+										processedData.shield_advantage.faf = localData[i].faf;
+									}
+									break;
+								}
+							}
+							global.calculateKOPercentBestDI(processedData, res);
+						} else {
+							res.status(500).json({
+								message: "Error: Move name not found"
+							});
+						}
 					});
 				}
 			});
