@@ -1,6 +1,6 @@
 # Sm4sh-Calculator-API
 
-Sm4sh Calculator functionality in a RESTful API on nodejs
+Sm4sh Calculator functionality on a API on nodejs
 
 API documentation can be found [here](http://calculator.kuroganehammer.com/swagger/ui/)
 
@@ -13,7 +13,7 @@ API documentation can be found [here](http://calculator.kuroganehammer.com/swagg
 
 ### Updates
 
-- The API uses local json files from the KH API that are used when KH API is down or giving error messages (except `/moves/id/{moveId}`)
+- The API uses local json files from the KH API that are used when KH API is down or giving error messages (except `/moves/id/{moveId}` which will be added when the KH API is back online)
 
 ### Issues and Feedback
 
