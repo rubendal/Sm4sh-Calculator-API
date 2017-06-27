@@ -13,6 +13,7 @@ API documentation can be found [here](http://calculator.kuroganehammer.com/swagg
 
 ### Updates
 
+- Move data end frame is no longer 0 when move is active for 1 frame, instead it's the same as start
 - The API uses local json files from the KH API that are used when KH API is down or giving error messages (except `/moves/id/{moveId}` which will be added when the KH API is back online)
 
 ### Issues and Feedback
