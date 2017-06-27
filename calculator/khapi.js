@@ -769,6 +769,33 @@ function getMove(id, callback) {
 	req.end();
 }
 
+function getMoveFromLocalFiles(id, callback) {
+	try {
+		var moves = [];
+		var moveset = require("../Data/KHAPI Local/moves");
+
+		var count = 1;
+		for (var i = 0; i < moveset.length; i++) {
+			var move = moveset[i];
+			var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+			for (var c = 0; c < parser.moves.length; c++) {
+				var m = parser.moves[c];
+				m.id = count;
+				if (!m.grab && m.valid && m.api_id == id) {
+					delete m.valid;
+					moves.push(m);
+					count++;
+				}
+			}
+		}
+
+		callback(moves);
+	} catch (err) {
+		console.log(err);
+		callback(null);
+	}
+}
+
 class Throw {
 	constructor(id, move_id, weightDependent) {
 		this.id = id;
@@ -787,3 +814,4 @@ exports.KHcharacters = KHcharacters;
 exports.getMoveset = getMoveset;
 exports.getMove = getMove;
 exports.getMovesetFromLocalFiles = getMovesetFromLocalFiles;
+exports.getMoveFromLocalFiles = getMoveFromLocalFiles;
