@@ -72,7 +72,7 @@ var exampleJsonRequest = {
 	},
 	stage: {
 		name: null,
-		stage_data: null, //use custom stage data!
+		stage_data: null,
 		position: { x: 0, y: 0 },
 		inverse_x: false
 	},

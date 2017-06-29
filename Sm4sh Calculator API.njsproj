@@ -39,7 +39,7 @@
     <Compile Include="public\swagger\ui\swagger-ui-bundle.js" />
     <Compile Include="public\swagger\ui\swagger-ui-standalone-preset.js" />
     <Compile Include="public\swagger\ui\swagger-ui.js" />
-    <Compile Include="routes\index.js" />
+    <Compile Include="routes\api.js" />
     <Content Include="Data\Bayonetta\attributes.json" />
     <Content Include="Data\Bowser Jr\attributes.json" />
     <Content Include="Data\Bowser\attributes.json" />
