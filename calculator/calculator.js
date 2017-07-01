@@ -2318,6 +2318,39 @@ function process(data, res) {
 	};
 }
 
+function processMoveData(data, moveList) {
+	for (var i = 0; i < moveList.length; i++) {
+		if (moveList[i].name == data.attack.name) {
+			data.attack.base_damage = moveList[i].base_damage;
+			data.attack.angle = moveList[i].angle;
+			data.attack.bkb = moveList[i].bkb;
+			data.attack.wbkb = moveList[i].wbkb;
+			data.attack.kbg = moveList[i].kbg;
+			data.attack.shield_damage = moveList[i].shieldDamage;
+			data.attack.preLaunchDamage = moveList[i].preLaunchDamage;
+			if (isNaN(data.attack.preLaunchDamage)) {
+				data.attack.preLaunchDamage = 0;
+			}
+			data.attack.is_smash_attack = moveList[i].smash_attack;
+			data.attack.chargeable = moveList[i].chargeable;
+			data.attack.charge = moveList[i].charge;
+			data.attack.unblockable = moveList[i].unblockable;
+			data.attack.windbox = moveList[i].windbox;
+			data.attack.landingLag = moveList[i].landingLag;
+			data.attack.autoCancel = moveList[i].autoCancel;
+			if (data.shield_advantage.hit_frame == null) {
+				if (moveList[i].hitboxActive.length > 0) {
+					data.shield_advantage.hit_frame = moveList[i].hitboxActive[0].start;
+				}
+			}
+			if (data.shield_advantage.faf == null) {
+				data.shield_advantage.faf = moveList[i].faf;
+			}
+			break;
+		}
+	}
+}
+
 function calculate(data,res) {
 	try {
 		var results = {};
@@ -2626,7 +2659,171 @@ function calculate(data,res) {
 		res.status(400).json({
 			message: "Error processing request"
 		});
-		console.log(err);
+	}
+}
+
+function calculateShieldAdvantage(data, res) {
+	try {
+		var results = {};
+		var kb;
+		var base_damage = data.attack.base_damage;
+		var preLaunchDamage = data.attack.preLaunchDamage;
+
+		if (data.attack.is_smash_attack) {
+			base_damage = ChargeSmash(base_damage, data.attack.charged_frames, data.attack.mega_man_fsmash, data.attack.on_witch_time);
+		}
+
+		if (data.attack.chargeable) {
+			if (data.attack.charge != null) {
+				base_damage = data.attack.charge.formula(data.attack.base_damage, data.attack.bkb, data.attack.charged_frames)[0].toFixed(6);
+				if (data.attack.charge.variable_bkb) {
+					data.attack.bkb = data.attack.charge.formula(data.attack.base_damage, data.attack.bkb, data.attack.charged_frames)[1].toFixed(6);
+				}
+			}
+		}
+
+		if (data.attacker.name == "Lucario") {
+			if (typeof data.attacker.aura != "undefined") {
+				if (data.attacker.aura == null) {
+					data.attacker.aura.stock_dif = "0";
+					data.attacker.aura.game_mode = "Singles";
+				}
+			} else {
+				data.attacker.aura = { stock_dif: "0", game_mode: "Singles" };
+			}
+
+			if (data.vs_mode) {
+				base_damage *= Aura(data.attacker_percent, data.attacker.aura.stock_dif, data.attacker.aura.game_mode);
+				preLaunchDamage *= Aura(data.attacker_percent, data.attacker.aura.stock_dif, data.attacker.aura.game_mode);
+			} else {
+				base_damage *= Aura(data.attacker_percent, "0", "Singles");
+				preLaunchDamage *= Aura(data.attacker_percent, "0", "Singles");
+			}
+
+		}
+
+		var damage = base_damage;
+		damage *= data.attacker.modifier.damage_dealt;
+		damage *= data.target.modifier.damage_taken;
+		preLaunchDamage *= data.attacker.modifier.damage_dealt;
+		preLaunchDamage *= data.target.modifier.damage_taken;
+		var crouch = 1;
+		var electric = "none";
+		var r = 1;
+
+		if (data.modifiers.crouch_cancel) {
+			r = 0.85;
+			crouch = 0.67;
+		} else if (data.modifiers.interrupted_smash) {
+			r = 1.2;
+		}
+
+		if (data.modifiers.electric_attack) {
+			electric = "electric";
+		}
+
+		var di = data.modifiers.di;
+		if (data.modifiers.no_di) {
+			di = -1;
+		}
+
+		var windbox = data.attack.windbox;
+		var is_projectile = data.attack.projectile;
+		var ignoreStale = data.attack.ignore_staleness;
+
+		var vs_mode = data.vs_mode;
+
+		if (data.attack.wbkb == 0) {
+			//No WBKB moves
+			if (vs_mode) {
+				kb = VSKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			} else {
+				kb = TrainingKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			}
+			kb.addModifier(data.attacker.modifier.kb_dealt);
+			kb.addModifier(data.target.modifier.kb_received);
+		} else {
+			//WBKB move
+			if (vs_mode) {
+				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			} else {
+				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			}
+			kb.addModifier(data.target.modifier.kb_received);
+		}
+
+		
+		results.unblockable = false;
+		results.shield_damage = null;
+		results.full_shield_hp = +(50 * data.target.modifier.shield).toFixed(6);
+		results.shield_break = null;
+		results.shield_hitlag = null;
+		results.shield_stun = null;
+		results.shield_advantage = null;
+
+		if ((data.shield_advantage.faf != null || data.shield_advantage.landing_frame != null) && data.shield_advantage.hit_frame != null) {
+			var faf = data.shield_advantage.faf;
+
+			if (data.modifiers.use_landing_lag && data.attack.landingLag != null && data.attack.landing_frame != null) {
+				var landing_lag = data.attack.landingLag;
+				faf = data.shield_advantage.landing_frame + landing_lag;
+			} else if (data.modifiers.use_autocancel && data.attack.autoCancel.length > 0 && data.attack.landing_frame != null) {
+				faf = data.shield_advantage.landing_frame;
+				var i = data.shield_advantage.hit_frame;
+				var h = data.shield_advantage.hit_frame + 50;
+				var f = false;
+				for (i = data.shield_advantage.hit_frame; i < h; i++) {
+					for (var x = 0; x < data.attack.autoCancel.length; x++) {
+						if (data.attack.autoCancel[x].eval(i)) {
+							f = true;
+							break;
+						}
+					}
+					if (f)
+						break;
+				}
+				if (f) {
+					faf = i + attacker.attributes.hard_landing_lag;
+				} else {
+					if (data.shield_advantage.faf != null) {
+						faf = data.shield_advantage.faf;
+					}
+				}
+			} else if (data.shield_advantage.faf != null) {
+				faf = data.shield_advantage.faf;
+			}
+
+			if (faf != null) {
+
+				//Shield advantage
+				if (!data.attack.unblockable) {
+					results.unblockable = false;
+					if (!data.shield_advantage.powershield) {
+						var s = (base_damage * data.attacker.modifier.damage_dealt * 1.19) + (data.attack.shield_damage * 1.19);
+						var sv = (StaleDamage(base_damage, data.attack.stale_queue, data.attack.ignore_staleness) * data.attacker.modifier.damage_dealt * 1.19) + (data.attack.shield_damage * 1.19);
+						results.shield_damage = vs_mode ? +sv.toFixed(6) : +s.toFixed(6);
+						results.full_shield_hp = +(50 * data.target.modifier.shield).toFixed(6);
+						results.shield_break = vs_mode ? sv >= 50 * data.target.modifier.shield : s >= 50 * data.target.modifier.shield;
+					}
+					results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, HitlagElectric(electric)) : ShieldHitlag(damage, data.attack.hitlag, HitlagElectric(electric));
+					results.shield_stun = vs_mode ? ShieldStun(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.is_projectile, data.modifiers.powershield) : ShieldStun(damage, data.attack.is_projectile, data.modifiers.powershield);
+					results.shield_advantage = vs_mode ? ShieldAdvantage(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, HitlagElectric(electric), data.modifiers.powershield) : ShieldAdvantage(damage, data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, HitlagElectric(electric), data.modifiers.powershield);
+				}
+				else {
+					results.unblockable = true;
+				}
+
+			}
+
+
+		}
+
+		res.json(results);
+	}
+	catch (err) {
+		res.status(400).json({
+			message: "Error processing request"
+		});
 	}
 }
 
@@ -2746,7 +2943,6 @@ function calculatePercentFromKB(data, res) {
 	}
 	catch (err) {
 		res.status(400).json({ message: "Error processing request" });
-		console.log(err);
 	}
 }
 
@@ -2918,7 +3114,6 @@ function calculateKOPercent(data, res) {
 	}
 	catch (err) {
 		res.status(400).json({ message: "Error processing request" });
-		console.log(err);
 	}
 }
 
@@ -2975,7 +3170,6 @@ function calculateKOPercentBestDI(data, res) {
 	}
 	catch (err) {
 		res.status(400).json({ message: "Error processing request" });
-		console.log(err);
 	}
 }
 
@@ -2999,3 +3193,5 @@ exports.calculate = calculate;
 exports.calculatePercentFromKB = calculatePercentFromKB;
 exports.calculateKOPercent = calculateKOPercent;
 exports.calculateKOPercentBestDI = calculateKOPercentBestDI;
+exports.processMoveData = processMoveData;
+exports.calculateShieldAdvantage = calculateShieldAdvantage;

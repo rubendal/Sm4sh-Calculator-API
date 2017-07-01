@@ -37,7 +37,7 @@
         "tags": [
           "Calculations"
         ],
-        "summary": "Calculate KB and distance launched",
+        "summary": "Calculate KB, shield advantage and distance launched",
         "description": "",
         "operationId": "calculateKB",
         "consumes": [
@@ -62,6 +62,47 @@
             "description": "Results",
             "schema": {
               "$ref": "#/definitions/KB_Response"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/calculate/shieldadvantage": {
+      "post": {
+        "tags": [
+          "Calculations"
+        ],
+        "summary": "Only calculate shield advantage",
+        "description": "",
+        "operationId": "calculateShieldAdvantage",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Data"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "schema": {
+              "$ref": "#/definitions/ShieldAdvantage_Response"
             }
           },
           "default": {
@@ -1058,6 +1099,37 @@
         "launch_speed": {
           "type": "object",
           "$ref": "#/definitions/Speed"
+        }
+      }
+    },
+    "ShieldAdvantage_Response": {
+      "type": "object",
+      "properties": {
+        "unblockable": {
+          "type": "boolean"
+        },
+        "shield_damage": {
+          "type": "number",
+          "format": "float"
+        },
+        "full_shield_hp": {
+          "type": "number",
+          "format": "float"
+        },
+        "shield_break": {
+          "type": "boolean"
+        },
+        "shield_hitlag": {
+          "type": "number",
+          "format": "int"
+        },
+        "shield_stun": {
+          "type": "number",
+          "format": "int"
+        },
+        "shield_advantage": {
+          "type": "number",
+          "format": "int"
         }
       }
     },

@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.js" />
-    <Compile Include="calculator\global.js" />
+    <Compile Include="calculator\calculator.js" />
     <Compile Include="calculator\khapi.js">
       <SubType>Code</SubType>
     </Compile>

@@ -792,7 +792,6 @@ function getMoveFromLocalFiles(id, callback) {
 
 		callback(moves);
 	} catch (err) {
-		console.log(err);
 		callback(null);
 	}
 }
