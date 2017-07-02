@@ -167,6 +167,20 @@ router.get('/stages', function (req, res) {
 	}
 });
 
+router.get('/stages/names', function (req, res) {
+	try {
+		var names = [];
+		for (var i = 0; i < calculator.stages.length; i++) {
+			names.push(calculator.stages[i].stage);
+		}
+		res.json(names);
+	} catch (err) {
+		res.status(500).json({
+			message: "Error: Couldn't process request"
+		});
+	}
+});
+
 router.get('/stages/:name', function (req, res) {
 	try {
 		var data = null;
@@ -183,20 +197,6 @@ router.get('/stages/:name', function (req, res) {
 				message: "Error: Stage not found"
 			});
 		}
-	} catch (err) {
-		res.status(500).json({
-			message: "Error: Couldn't process request"
-		});
-	}
-});
-
-router.get('/stages/names', function (req, res) {
-	try {
-		var names = [];
-		for (var i = 0; i < calculator.stages.length; i++) {
-			names.push(calculator.stages[i].stage);
-		}
-		res.json(names);
 	} catch (err) {
 		res.status(500).json({
 			message: "Error: Couldn't process request"
