@@ -145,8 +145,8 @@ router.get('/characters/:name/modifiers/names', function (req, res) {
 	try {
 		var character = new calculator.Character(req.params.name);
 		var names = [];
-		for (var i = 0; i < characters.modifiers.length; i++) {
-			names.push(characters.modifiers[i].name);
+		for (var i = 0; i < character.modifiers.length; i++) {
+			names.push(character.modifiers[i].name);
 		}
 		res.json(names);
 	} catch (err) {
