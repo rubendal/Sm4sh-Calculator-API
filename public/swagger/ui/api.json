@@ -1634,6 +1634,9 @@
         },
         "type": {
           "type": "string"
+        },
+        "character": {
+          "type": "string"
         }
       }
     },
