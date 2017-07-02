@@ -17,6 +17,7 @@ API documentation can be found [here](http://calculator.kuroganehammer.com/swagg
 - The API uses local json files from the KH API that are used when KH API is down or giving error messages
 - Changed move autocancel data, > on KH is actually >=
 - Added calculate only shield advantage call
+- Added character attribute/modifier lists, stage data given by name and all moves list calls
 
 ### Issues and Feedback
 

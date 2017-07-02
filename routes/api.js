@@ -114,9 +114,75 @@ router.get('/characters', function (req, res) {
 	}
 });
 
+//Respond with character attributes
+router.get('/characters/:name', function (req, res) {
+	try {
+		var character = new calculator.Character(req.params.name);
+		res.json(character.attributes);
+	} catch (err) {
+		res.status(500).json({
+			message: "Error: Couldn't process request"
+		});
+		console.log(err);
+	}
+});
+
+//Respond with character modifier list
+router.get('/characters/:name/modifiers', function (req, res) {
+	try {
+		var character = new calculator.Character(req.params.name);
+		res.json(character.modifiers);
+	} catch (err) {
+		res.status(500).json({
+			message: "Error: Couldn't process request"
+		});
+		console.log(err);
+	}
+});
+
+//Respond with character modifier name list
+router.get('/characters/:name/modifiers/names', function (req, res) {
+	try {
+		var character = new calculator.Character(req.params.name);
+		var names = [];
+		for (var i = 0; i < characters.modifiers.length; i++) {
+			names.push(characters.modifiers[i].name);
+		}
+		res.json(names);
+	} catch (err) {
+		res.status(500).json({
+			message: "Error: Couldn't process request"
+		});
+		console.log(err);
+	}
+});
+
 router.get('/stages', function (req, res) {
 	try {
 		res.json(calculator.stages);
+	} catch (err) {
+		res.status(500).json({
+			message: "Error: Couldn't process request"
+		});
+	}
+});
+
+router.get('/stages/:name', function (req, res) {
+	try {
+		var data = null;
+		for (var i = 0; i < calculator.stages.length; i++) {
+			if (calculator.stages[i].stage == req.params.name) {
+				data = calculator.stages[i];
+				break;
+			}
+		}
+		if (data != null) {
+			res.json(data);
+		} else {
+			res.status(400).json({
+				message: "Error: Stage not found"
+			});
+		}
 	} catch (err) {
 		res.status(500).json({
 			message: "Error: Couldn't process request"
@@ -136,6 +202,24 @@ router.get('/stages/names', function (req, res) {
 			message: "Error: Couldn't process request"
 		});
 	}
+});
+
+router.get('/moves', function (req, res) {
+	kh.getMoves(function (data) {
+		if (data != null) {
+			res.json(data);
+		} else {
+			kh.getMovesFromLocalFiles(function (localData) {
+				if (localData != null) {
+					res.json(localData);
+				} else {
+					res.status(500).json({
+						message: "Error: Unable to get move data"
+					});
+				}
+			});
+		}
+	});
 });
 
 router.get('/moves/:name/names', function (req, res) {

@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "title": "Sm4sh Calculator API"
   },
   "host": "calculator.kuroganehammer.com",
@@ -297,6 +297,120 @@
         }
       }
     },
+    "/characters/{characterName}": {
+      "get": {
+        "tags": [
+          "Characters"
+        ],
+        "summary": "Get character attributes",
+        "description": "",
+        "operationId": "getCharactersAttributes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "characterName",
+            "type": "string",
+            "description": "Character name",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character attributes",
+            "schema": {
+              "$ref": "#/definitions/CharacterAttributes"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/characters/{characterName}/modifiers": {
+      "get": {
+        "tags": [
+          "Characters"
+        ],
+        "summary": "Get character attribute modifiers",
+        "description": "",
+        "operationId": "getCharactersModifiers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "characterName",
+            "type": "string",
+            "description": "Character name",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character attribute modifier list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Modifier"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/characters/{characterName}/modifiers/names": {
+      "get": {
+        "tags": [
+          "Characters"
+        ],
+        "summary": "Get character attribute modifiers name list",
+        "description": "",
+        "operationId": "getCharactersModifiersNames",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "characterName",
+            "type": "string",
+            "description": "Character name",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Character attribute modifier name list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/stages": {
       "get": {
         "tags": [
@@ -345,6 +459,72 @@
               "type": "array",
               "items": {
                 "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/stages/{stageName}": {
+      "get": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Get stage data",
+        "description": "",
+        "operationId": "getStageByName",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stageName",
+            "type": "string",
+            "description": "Stage name",
+            "required": true
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Stage data",
+            "schema": {
+              "$ref": "#/definitions/StageData"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/moves": {
+      "get": {
+        "tags": [
+          "Moves"
+        ],
+        "summary": "Get all moves",
+        "description": "",
+        "operationId": "getMoves",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "All Character moves list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MoveData"
               }
             }
           },
@@ -1491,6 +1671,162 @@
             "type": "number",
             "format": "int"
           }
+        }
+      }
+    },
+    "CharacterAttributes": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number",
+          "format": "int"
+        },
+        "run_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "walk_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "air_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "fall_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "fast_fall_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "air_acceleration": {
+          "type": "number",
+          "format": "float"
+        },
+        "gravity": {
+          "type": "number",
+          "format": "float"
+        },
+        "sh_air_time": {
+          "type": "number",
+          "format": "int"
+        },
+        "jumps": {
+          "type": "number",
+          "format": "int"
+        },
+        "wall_jump": {
+          "type": "boolean"
+        },
+        "wall_cling": {
+          "type": "boolean"
+        },
+        "crawl": {
+          "type": "boolean"
+        },
+        "tether": {
+          "type": "boolean"
+        },
+        "jumpsquat": {
+          "type": "number",
+          "format": "int"
+        },
+        "soft_landing_lag": {
+          "type": "number",
+          "format": "int"
+        },
+        "hard_landing_lag": {
+          "type": "number",
+          "format": "int"
+        },
+        "fh_air_time": {
+          "type": "number",
+          "format": "int"
+        },
+        "traction": {
+          "type": "number",
+          "format": "float"
+        },
+        "gravity2": {
+          "type": "number",
+          "format": "float"
+        },
+        "air_friction": {
+          "type": "number",
+          "format": "float"
+        },
+        "initial_dash": {
+          "type": "number",
+          "format": "float"
+        },
+        "run_acceleration": {
+          "type": "number",
+          "format": "float"
+        },
+        "run_deceleration": {
+          "type": "number",
+          "format": "float"
+        },
+        "jump_height": {
+          "type": "number",
+          "format": "float"
+        },
+        "hop_height": {
+          "type": "number",
+          "format": "float"
+        },
+        "air_jump_height": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Modifier": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "damage_dealt": {
+          "type": "number",
+          "format": "float"
+        },
+        "damage_taken": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_dealt": {
+          "type": "number",
+          "format": "float"
+        },
+        "kb_received": {
+          "type": "number",
+          "format": "float"
+        },
+        "gravity": {
+          "type": "number",
+          "format": "float"
+        },
+        "fall_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "shield": {
+          "type": "number",
+          "format": "float"
+        },
+        "air_friction": {
+          "type": "number",
+          "format": "float"
+        },
+        "traction": {
+          "type": "number",
+          "format": "float"
         }
       }
     }

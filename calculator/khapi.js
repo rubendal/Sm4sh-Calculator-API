@@ -575,15 +575,15 @@ class Move {
 	}
 };
 
+var charactersJson = require("../Data/characters");
+
 function getCharacterIdFromKH(name) {
 	
 	var api_name = name.toLowerCase().replace("&", "").replace("and", "").replace("-", "").split(".").join("").split(" ").join("");
-	
-	var json = require("../Data/characters");
 
-	for (var i = 0; i < json.length; i++) {
-		if (api_name == json[i].name.toLowerCase()) {
-			return json[i].id;
+	for (var i = 0; i < charactersJson.length; i++) {
+		if (api_name == charactersJson[i].name.toLowerCase()) {
+			return charactersJson[i].id;
 		}
 	}
 
@@ -593,14 +593,13 @@ function getCharacterIdFromKH(name) {
 var names = ["Mario", "Luigi", "Peach", "Bowser", "Yoshi", "Rosalina & Luma", "Bowser Jr.", "Wario", "Donkey Kong", "Diddy Kong", "Mr. Game & Watch", "Little Mac", "Link", "Zelda", "Sheik", "Ganondorf", "Toon Link", "Samus", "Zero Suit Samus", "Pit", "Palutena", "Marth", "Ike", "Robin", "Duck Hunt", "Kirby", "King Dedede", "Meta Knight", "Fox", "Falco", "Pikachu", "Charizard", "Lucario", "Jigglypuff", "Greninja", "R.O.B", "Ness", "Captain Falcon", "Villager", "Olimar", "Wii Fit Trainer", "Shulk", "Dr. Mario", "Dark Pit", "Lucina", "PAC-MAN", "Mega Man", "Sonic", "Mewtwo", "Lucas", "Roy", "Ryu", "Cloud", "Corrin", "Bayonetta", "Mii Swordfighter", "Mii Brawler", "Mii Gunner"];
 var KHcharacters = ["Mario", "Luigi", "Peach", "Bowser", "Yoshi", "Rosalina And Luma", "Bowser Jr", "Wario", "Donkey Kong", "Diddy Kong", "Mr. Game & Watch", "Little Mac", "Link", "Zelda", "Sheik", "Ganondorf", "Toon Link", "Samus", "Zero Suit Samus", "Pit", "Palutena", "Marth", "Ike", "Robin", "Duck Hunt", "Kirby", "King Dedede", "Meta Knight", "Fox", "Falco", "Pikachu", "Charizard", "Lucario", "Jigglypuff", "Greninja", "R.O.B", "Ness", "Captain Falcon", "Villager", "Olimar", "Wii Fit Trainer", "Shulk", "Dr. Mario", "Dark Pit", "Lucina", "PAC-MAN", "Mega Man", "Sonic", "Mewtwo", "Lucas", "Roy", "Ryu", "Cloud", "Corrin", "Bayonetta", "Mii Swordfighter", "Mii Brawler", "Mii Gunner"];
 
-function getCharacterNameFromId(id) {
-	var json = require("../Data/characters");
 
+function getCharacterNameFromId(id) {
 	var api_name = null;
 
-	for (var i = 0; i < json.length; i++) {
-		if (id == json[i].id) {
-			api_name = json[i].name.toLowerCase();
+	for (var i = 0; i < charactersJson.length; i++) {
+		if (id == charactersJson[i].id) {
+			api_name = charactersJson[i].name.toLowerCase();
 			break;
 		}
 
@@ -656,6 +655,7 @@ function getMoveset(name, callback) {
 								m.id = count;
 								if (!m.grab && m.valid) {
 									delete m.valid;
+									m.character = getCharacterNameFromId(move.ownerId);
 									moves.push(m);
 									count++;
 								}
@@ -700,6 +700,7 @@ function getMovesetFromLocalFiles(name, callback) {
 					m.id = count;
 					if (!m.grab && m.valid) {
 						delete m.valid;
+						m.character = getCharacterNameFromId(move.ownerId);
 						moves.push(m);
 						count++;
 					}
@@ -746,6 +747,7 @@ function getMove(id, callback) {
 						m.id = count;
 						if (!m.grab && m.valid) {
 							delete m.valid;
+							m.character = getCharacterNameFromId(move.ownerId);
 							moves.push(m);
 							count++;
 						}
@@ -784,6 +786,95 @@ function getMoveFromLocalFiles(id, callback) {
 				m.id = count;
 				if (!m.grab && m.valid && m.api_id == id) {
 					delete m.valid;
+					m.character = getCharacterNameFromId(move.ownerId);
+					moves.push(m);
+					count++;
+				}
+			}
+		}
+
+		callback(moves);
+	} catch (err) {
+		callback(null);
+	}
+}
+
+function getMoves(callback) {
+	var http = require('http');
+	var options = {
+		host: 'api.kuroganehammer.com',
+		path: '/api/moves',
+		method: 'GET'
+	};
+
+	var moves = null;
+
+	var req = http.request(options, function (res) {
+		var json = "";
+		res.setEncoding('utf8');
+		res.on('data', function (data) {
+			json += data;
+		});
+		res.on('end', function () {
+			try {
+				var moveset = JSON.parse(json);
+				//Error message from API
+				if (typeof moveset.message != "undefined") {
+					callback(null);
+				} else {
+
+					moves = [];
+					var count = 1;
+					for (var i = 0; i < moveset.length; i++) {
+						var move = moveset[i];
+						var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+						for (var c = 0; c < parser.moves.length; c++) {
+							var m = parser.moves[c];
+							m.id = count;
+							if (!m.grab && m.valid) {
+								delete m.valid;
+								m.character = getCharacterNameFromId(move.ownerId);
+								moves.push(m);
+								count++;
+							}
+						}
+					}
+
+					callback(moves);
+				}
+
+			} catch (e) {
+				moves = null;
+				callback(moves);
+			}
+		});
+	}).on('error', function (err) {
+		moves = null;
+		callback(moves);
+	});
+
+	req.setTimeout(10000, function () {
+		req.abort();
+	});
+
+	req.end();
+}
+
+function getMovesFromLocalFiles(callback) {
+	try {
+		var moves = [];
+		var moveset = require("../Data/KHAPI Local/moves");
+
+		var count = 1;
+		for (var i = 0; i < moveset.length; i++) {
+			var move = moveset[i];
+			var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+			for (var c = 0; c < parser.moves.length; c++) {
+				var m = parser.moves[c];
+				m.id = count;
+				if (!m.grab && m.valid) {
+					delete m.valid;
+					m.character = getCharacterNameFromId(move.ownerId);
 					moves.push(m);
 					count++;
 				}
@@ -815,3 +906,5 @@ exports.getMoveset = getMoveset;
 exports.getMove = getMove;
 exports.getMovesetFromLocalFiles = getMovesetFromLocalFiles;
 exports.getMoveFromLocalFiles = getMoveFromLocalFiles;
+exports.getMoves = getMoves;
+exports.getMovesFromLocalFiles = getMovesFromLocalFiles;

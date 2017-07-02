@@ -290,3 +290,7 @@ __pycache__/
 
 Web.config
 Web.Debug.config
+
+public/*
+!public/swagger
+!public/stylesheets
