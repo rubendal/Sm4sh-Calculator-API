@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "title": "Sm4sh Calculator API"
   },
   "host": "calculator.kuroganehammer.com",
@@ -1096,7 +1096,7 @@
           "type": "number",
           "format": "float"
         },
-        "angke_with_di": {
+        "angle_with_di": {
           "type": "number",
           "format": "float"
         },
@@ -1513,9 +1513,8 @@
       "type": "object",
       "properties": {
         "api_id": {
-          "description": "Move id from KH API",
-          "type": "number",
-          "format": "int"
+          "description": "Move instance id from KH API",
+          "type": "string"
         },
         "id": {
           "type": "number",
@@ -1589,6 +1588,10 @@
         "shieldDamage": {
           "type": "number",
           "format": "int"
+        },
+        "weightDependent": {
+          "type": "boolean",
+          "default": false
         },
         "smash_attack": {
           "type": "boolean"

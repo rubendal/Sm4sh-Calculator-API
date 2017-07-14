@@ -1082,9 +1082,6 @@ class Distance {
 
 		for (var i = 0; i < limit; i++) {
 
-			
-
-
 			var next_x = character_position.x + launch_speed.x + character_speed.x;
 			var next_y = character_position.y + launch_speed.y + character_speed.y;
 
@@ -1095,8 +1092,8 @@ class Distance {
 
 			this.launch_speeds.push(Math.sqrt(Math.pow(launch_speed.x, 2) + Math.pow(launch_speed.y, 2)));
 
-			this.horizontal_speed.push((launch_speed.x));
-			this.vertical_speed.push((launch_speed.y));
+			this.horizontal_speed.push((+launch_speed.x.toFixed(6)));
+			this.vertical_speed.push((+launch_speed.y.toFixed(6)));
 
 			//Vertical direction
 			if (next_y > character_position.y) {

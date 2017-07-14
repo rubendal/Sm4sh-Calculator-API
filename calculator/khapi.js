@@ -48,7 +48,18 @@ class CancelCond {
 }
 
 class MoveParser {
-	constructor(id, name, base_damage, angle, bkb, kbg, hitboxActive, faf, landingLag, autoCancel, ignore_hitboxes) {
+	constructor(id, name, base_damage, angle, bkb, kbg, hitboxActive, faf, landingLag, autoCancel, weightDependent, ignore_hitboxes) {
+
+		if (base_damage == null)
+			base_damage = "";
+		if (angle == null)
+			angle = "";
+		if (bkb == null)
+			bkb = "";
+		if (kbg == null)
+			kbg = "";
+
+
 		this.id = id;
 		this.name = name;
 		this.angle = angle;
@@ -71,6 +82,8 @@ class MoveParser {
 
 		this.shieldDamage = 0;
 		var shieldDamageRegex = /\(\+[0-9]+\)/i;
+
+		this.weightDependent = weightDependent;
 
 		if (!this.throw) {
 			this.hitboxActive = parseHitbox(hitboxActive);
@@ -283,7 +296,7 @@ class MoveParser {
 							}
 						}
 					}
-					this.moves.push(new Move(this.id, i, hitbox_name, this.name, parseFloat(d), parseFloat(a), parseFloat(b), parseFloat(k), parseFloat(wbkb), this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, s));
+					this.moves.push(new Move(this.id, i, hitbox_name, this.name, parseFloat(d), parseFloat(a), parseFloat(b), parseFloat(k), parseFloat(wbkb), this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, s, this.weightDependent));
 					if (ignore_hitboxes) {
 						return;
 					}
@@ -316,17 +329,17 @@ class MoveParser {
 				}
 				if (this.base_damage == "" && this.angle == "" && this.bkb == "" && this.kbg == "") {
 					if (this.grab) {
-						this.moves.push(new Move(this.id, 0, this.name, this.name, NaN, NaN, NaN, NaN, NaN, this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, this.shieldDamage));
+						this.moves.push(new Move(this.id, 0, this.name, this.name, NaN, NaN, NaN, NaN, NaN, this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, this.shieldDamage, this.weightDependent));
 					} else {
-						this.moves.push(new Move(this.id, 0, this.name, this.name, NaN, NaN, NaN, NaN, NaN, this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, this.shieldDamage).invalidate());
+						this.moves.push(new Move(this.id, 0, this.name, this.name, NaN, NaN, NaN, NaN, NaN, this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, this.shieldDamage, this.weightDependent).invalidate());
 					}
 				} else {
-					this.moves.push(new Move(this.id, 0, this.name, this.name, parseFloat(this.base_damage), parseFloat(this.angle), parseFloat(this.bkb), parseFloat(this.kbg), parseFloat(wbkb), this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, this.shieldDamage));
+					this.moves.push(new Move(this.id, 0, this.name, this.name, parseFloat(this.base_damage), parseFloat(this.angle), parseFloat(this.bkb), parseFloat(this.kbg), parseFloat(wbkb), this.hitboxes, parseFloat(this.faf), parseFloat(this.landingLag), this.autoCancel, this.preDamage, this.counterMult, this.rehitRate, this.shieldDamage, this.weightDependent));
 				}
 			}
 
 		} else {
-			this.moves.push(new Move(this.id, 0, this.name, this.name, NaN, NaN, NaN, NaN, NaN, [new HitboxActiveFrames(NaN, NaN)], NaN, parseFloat(this.landingLag), this.autoCancel, 0, this.counterMult, this.rehitRate, this.shieldDamage).invalidate());
+			this.moves.push(new Move(this.id, 0, this.name, this.name, NaN, NaN, NaN, NaN, NaN, [new HitboxActiveFrames(NaN, NaN)], NaN, parseFloat(this.landingLag), this.autoCancel, 0, this.counterMult, this.rehitRate, this.shieldDamage, this.weightDependent).invalidate());
 		}
 
 
@@ -429,7 +442,7 @@ var chargeMoves = [
 	})];
 
 class Move {
-	constructor(api_id, hitbox_no, name, moveName, base_damage, angle, bkb, kbg, wbkb, hitboxActive, faf, landingLag, autoCancel, preDamage, counterMult, rehitRate, shieldDamage) {
+	constructor(api_id, hitbox_no, name, moveName, base_damage, angle, bkb, kbg, wbkb, hitboxActive, faf, landingLag, autoCancel, preDamage, counterMult, rehitRate, shieldDamage, weightDependent) {
 		this.api_id = api_id;
 		this.id = 0;
 		this.hitbox_no = hitbox_no;
@@ -448,6 +461,7 @@ class Move {
 		this.counterMult = counterMult;
 		this.rehitRate = rehitRate;
 		this.shieldDamage = shieldDamage;
+		this.weightDependent = weightDependent;
 
 		this.eval_autoCancel = function (value) {
 			for (var i = 0; i < this.autoCancel.length; i++) {
@@ -507,6 +521,13 @@ class Move {
 			return this;
 		}
 
+		this.check = function () {
+			if (isNaN(this.base_damage) && isNaN(this.angle) && isNaN(this.bkb) && isNaN(this.kbg))
+				this.valid = false;
+
+			return this;
+		}
+
 		this.addCharacter = function (character) {
 			this.character = character;
 			return this;
@@ -558,6 +579,10 @@ class Move {
 			this.type += ",LimitBreak";
 		}
 
+		if (this.weightDependent) {
+			this.type += ",WeightDependent"
+		}
+
 		if (previousMove != null && this.hitboxActive.length == 1 && isNaN(this.faf)) {
 			if (this.moveName.split("(")[0].trim() == previousMove.moveName.split("(")[0].trim()) {
 				this.faf = previousMove.faf;
@@ -572,6 +597,10 @@ class Move {
 			}
 		}
 		previousMove = this;
+
+		//Check if move can be used in the calculator
+		if (isNaN(this.base_damage) && isNaN(this.angle) && isNaN(this.bkb) && isNaN(this.kbg))
+			this.valid = false;
 	}
 };
 
@@ -579,11 +608,10 @@ var charactersJson = require("../Data/characters");
 
 function getCharacterIdFromKH(name) {
 	
-	var api_name = name.toLowerCase().replace("&", "").replace("and", "").replace("-", "").split(".").join("").split(" ").join("");
-
+	var api_name = name.toLowerCase().replace("and", "").replace("&", "").split(".").join("").split(" ").join("");
 	for (var i = 0; i < charactersJson.length; i++) {
-		if (api_name == charactersJson[i].name.toLowerCase()) {
-			return charactersJson[i].id;
+		if (api_name == charactersJson[i].Name.toLowerCase()) {
+			return charactersJson[i].OwnerId;
 		}
 	}
 
@@ -598,8 +626,8 @@ function getCharacterNameFromId(id) {
 	var api_name = null;
 
 	for (var i = 0; i < charactersJson.length; i++) {
-		if (id == charactersJson[i].id) {
-			api_name = charactersJson[i].name.toLowerCase();
+		if (id == charactersJson[i].OwnerId) {
+			api_name = charactersJson[i].Name.toLowerCase();
 			break;
 		}
 
@@ -607,7 +635,7 @@ function getCharacterNameFromId(id) {
 
 	if (api_name != null) {
 		for (var i = 0; i < KHcharacters.length; i++) {
-			if (KHcharacters[i].toLowerCase().replace("&","").replace("and", "").replace("-", "").split(".").join("").split(" ").join("") == api_name) {
+			if (KHcharacters[i].toLowerCase().replace("and", "").replace("&", "").split(".").join("").split(" ").join("") == api_name) {
 				return names[i];
 			}
 		}
@@ -623,7 +651,7 @@ function getMoveset(name, callback) {
 	} else {
 		var http = require('http');
 		var options = {
-			host: 'api.kuroganehammer.com',
+			host: 'beta-api-kuroganehammer.azurewebsites.net',
 			path: '/api/Characters/' + id + "/moves",
 			method: 'GET'
 		};
@@ -639,7 +667,6 @@ function getMoveset(name, callback) {
 			res.on('end', function () {
 				try {
 					var moveset = JSON.parse(json);
-
 					//Error message from API
 					if (typeof moveset.message != "undefined") {
 						callback(null);
@@ -649,13 +676,13 @@ function getMoveset(name, callback) {
 						var count = 1;
 						for (var i = 0; i < moveset.length; i++) {
 							var move = moveset[i];
-							var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+							var parser = new MoveParser(move.InstanceId, move.Name, move.BaseDamage, move.Angle, move.BaseKnockBackSetKnockback, move.KnockbackGrowth, move.HitboxActive, move.FirstActionableFrame, move.LandingLag, move.AutoCancel, move.IsWeightDependent, false);
 							for (var c = 0; c < parser.moves.length; c++) {
 								var m = parser.moves[c];
 								m.id = count;
 								if (!m.grab && m.valid) {
 									delete m.valid;
-									m.character = getCharacterNameFromId(move.ownerId);
+									m.character = getCharacterNameFromId(move.OwnerId);
 									moves.push(m);
 									count++;
 								}
@@ -694,13 +721,13 @@ function getMovesetFromLocalFiles(name, callback) {
 			var count = 1;
 			for (var i = 0; i < moveset.length; i++) {
 				var move = moveset[i];
-				var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+				var parser = new MoveParser(move.InstanceId, move.Name, move.BaseDamage, move.Angle, move.BaseKnockBackSetKnockback, move.KnockbackGrowth, move.HitboxActive, move.FirstActionableFrame, move.LandingLag, move.AutoCancel, move.IsWeightDependent, false);
 				for (var c = 0; c < parser.moves.length; c++) {
 					var m = parser.moves[c];
 					m.id = count;
 					if (!m.grab && m.valid) {
 						delete m.valid;
-						m.character = getCharacterNameFromId(move.ownerId);
+						m.character = getCharacterNameFromId(move.OwnerId);
 						moves.push(m);
 						count++;
 					}
@@ -717,7 +744,7 @@ function getMovesetFromLocalFiles(name, callback) {
 function getMove(id, callback) {
 	var http = require('http');
 	var options = {
-		host: 'api.kuroganehammer.com',
+		host: 'beta-api-kuroganehammer.azurewebsites.net',
 		path: '/api/moves/' + id,
 		method: 'GET'
 	};
@@ -741,13 +768,13 @@ function getMove(id, callback) {
 
 					moves = [];
 					var count = 1;
-					var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+					var parser = new MoveParser(move.InstanceId, move.Name, move.BaseDamage, move.Angle, move.BaseKnockBackSetKnockback, move.KnockbackGrowth, move.HitboxActive, move.FirstActionableFrame, move.LandingLag, move.AutoCancel, move.IsWeightDependent, false);
 					for (var c = 0; c < parser.moves.length; c++) {
 						var m = parser.moves[c];
 						m.id = count;
 						if (!m.grab && m.valid) {
 							delete m.valid;
-							m.character = getCharacterNameFromId(move.ownerId);
+							m.character = getCharacterNameFromId(move.OwnerId);
 							moves.push(m);
 							count++;
 						}
@@ -780,13 +807,13 @@ function getMoveFromLocalFiles(id, callback) {
 		var count = 1;
 		for (var i = 0; i < moveset.length; i++) {
 			var move = moveset[i];
-			var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+			var parser = new MoveParser(move.InstanceId, move.Name, move.BaseDamage, move.Angle, move.BaseKnockBackSetKnockback, move.KnockbackGrowth, move.HitboxActive, move.FirstActionableFrame, move.LandingLag, move.AutoCancel, move.IsWeightDependent, false);
 			for (var c = 0; c < parser.moves.length; c++) {
 				var m = parser.moves[c];
 				m.id = count;
 				if (!m.grab && m.valid && m.api_id == id) {
 					delete m.valid;
-					m.character = getCharacterNameFromId(move.ownerId);
+					m.character = getCharacterNameFromId(move.OwnerId);
 					moves.push(m);
 					count++;
 				}
@@ -802,7 +829,7 @@ function getMoveFromLocalFiles(id, callback) {
 function getMoves(callback) {
 	var http = require('http');
 	var options = {
-		host: 'api.kuroganehammer.com',
+		host: 'beta-api-kuroganehammer.azurewebsites.net',
 		path: '/api/moves',
 		method: 'GET'
 	};
@@ -827,13 +854,13 @@ function getMoves(callback) {
 					var count = 1;
 					for (var i = 0; i < moveset.length; i++) {
 						var move = moveset[i];
-						var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+						var parser = new MoveParser(move.InstanceId, move.Name, move.BaseDamage, move.Angle, move.BaseKnockBackSetKnockback, move.KnockbackGrowth, move.HitboxActive, move.FirstActionableFrame, move.LandingLag, move.AutoCancel, move.IsWeightDependent, false);
 						for (var c = 0; c < parser.moves.length; c++) {
 							var m = parser.moves[c];
 							m.id = count;
 							if (!m.grab && m.valid) {
 								delete m.valid;
-								m.character = getCharacterNameFromId(move.ownerId);
+								m.character = getCharacterNameFromId(move.OwnerId);
 								moves.push(m);
 								count++;
 							}
@@ -868,13 +895,13 @@ function getMovesFromLocalFiles(callback) {
 		var count = 1;
 		for (var i = 0; i < moveset.length; i++) {
 			var move = moveset[i];
-			var parser = new MoveParser(move.id, move.name, move.baseDamage, move.angle, move.baseKnockBackSetKnockback, move.knockbackGrowth, move.hitboxActive, move.firstActionableFrame, move.landingLag, move.autoCancel, false);
+			var parser = new MoveParser(move.InstanceId, move.Name, move.BaseDamage, move.Angle, move.BaseKnockBackSetKnockback, move.KnockbackGrowth, move.HitboxActive, move.FirstActionableFrame, move.LandingLag, move.AutoCancel, move.IsWeightDependent, false);
 			for (var c = 0; c < parser.moves.length; c++) {
 				var m = parser.moves[c];
 				m.id = count;
 				if (!m.grab && m.valid) {
 					delete m.valid;
-					m.character = getCharacterNameFromId(move.ownerId);
+					m.character = getCharacterNameFromId(move.OwnerId);
 					moves.push(m);
 					count++;
 				}
@@ -887,16 +914,8 @@ function getMovesFromLocalFiles(callback) {
 	}
 }
 
-class Throw {
-	constructor(id, move_id, weightDependent) {
-		this.id = id;
-		this.move_id = move_id;
-		this.weightDependent = weightDependent;
-	}
-};
 
 exports.Move = Move;
-exports.Throw = Throw;
 
 exports.getCharacterIdFromKH = getCharacterIdFromKH;
 exports.getCharacterNameFromId = getCharacterNameFromId;
