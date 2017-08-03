@@ -42,8 +42,8 @@ var parameters = {
 };
 
 //Formulas
-function TrainingKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, angle, in_air, windbox, electric, di, launch_rate) {
-	return new Knockback((((((((percent + damage) / 10) + (((percent + damage) * base_damage) / 20)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * r, angle, gravity, fall_speed, in_air, windbox, electric, percent + damage, di, 1);
+function TrainingKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, angle, in_air, windbox, electric, set_weight, di, launch_rate) {
+	return new Knockback((((((((percent + damage) / 10) + (((percent + damage) * base_damage) / 20)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * r, angle, gravity, fall_speed, in_air, windbox, electric, percent + damage, set_weight, di, 1);
 }
 
 function Rage(percent) {
@@ -200,13 +200,13 @@ function SakuraiAngle(kb, aerial) {
 	return (kb - 60) / 0.7;
 }
 
-function VSKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, timesInQueue, ignoreStale, attacker_percent, angle, in_air, windbox, electric, di, launch_rate) {
+function VSKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, timesInQueue, ignoreStale, attacker_percent, angle, in_air, windbox, electric, set_weight, di, launch_rate) {
 	var s = StaleNegation(timesInQueue, ignoreStale);
-	return new Knockback((((((((percent + damage * s) / 10 + (((percent + damage * s) * base_damage * (1 - (1 - s) * 0.3)) / 20)) * 1.4 * (200 / (weight + 100))) + 18) * (kbg / 100)) + bkb)) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, percent + (damage * s), di, launch_rate);
+	return new Knockback((((((((percent + damage * s) / 10 + (((percent + damage * s) * base_damage * (1 - (1 - s) * 0.3)) / 20)) * 1.4 * (200 / (weight + 100))) + 18) * (kbg / 100)) + bkb)) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, percent + (damage * s), set_weight, di, launch_rate);
 }
 
-function WeightBasedKB(weight, bkb, wbkb, kbg, gravity, fall_speed, r, target_percent, damage, attacker_percent, angle, in_air, windbox, electric, di, launch_rate) {
-	return new Knockback((((((1 + (wbkb / 2)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, target_percent + damage, di, launch_rate);
+function WeightBasedKB(weight, bkb, wbkb, kbg, gravity, fall_speed, r, target_percent, damage, attacker_percent, angle, in_air, windbox, electric, set_weight, di, launch_rate) {
+	return new Knockback((((((1 + (wbkb / 2)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, target_percent + damage, set_weight, di, launch_rate);
 }
 
 function StaleDamage(base_damage, timesInQueue, ignoreStale) {
@@ -1630,7 +1630,7 @@ class Distance {
 };
 
 class Knockback {
-	constructor(kb, angle, gravity, fall_speed, aerial, windbox, electric, percent, di, launch_rate) {
+	constructor(kb, angle, gravity, fall_speed, aerial, windbox, electric, percent, set_weight, di, launch_rate) {
 		this.base_kb = kb;
 		if (this.base_kb > 2500) {
 			//this.base_kb = 2500;
@@ -1643,6 +1643,7 @@ class Knockback {
 		this.gravity = gravity;
 		this.aerial = aerial;
 		this.windbox = windbox;
+		this.set_weight = set_weight;
 		this.tumble = false;
 		this.can_jablock = false;
 		this.di_able = false;
@@ -1691,7 +1692,7 @@ class Knockback {
 			this.x = Math.abs(Math.cos(this.angle * Math.PI / 180) * this.kb);
 			this.y = Math.abs(Math.sin(this.angle * Math.PI / 180) * this.kb);
 			this.add_gravity_speed = parameters.gravity.mult * (this.gravity - parameters.gravity.constant);
-			if (!this.tumble) {
+			if (!this.tumble || this.set_weight) {
 				this.add_gravity_speed = 0;
 			}
 			this.can_jablock = false;
@@ -1714,7 +1715,7 @@ class Knockback {
 			this.horizontal_launch_speed = LaunchSpeed(this.x);
 			this.vertical_launch_speed = LaunchSpeed(this.y);
 
-			if (this.tumble) {
+			if (this.tumble && !this.set_weight) {
 				this.vertical_launch_speed += this.add_gravity_speed;
 				//Gravity boost changes launch angle
 				var x_ref = Math.cos(this.angle * Math.PI / 180);
@@ -2422,18 +2423,18 @@ function calculate(data,res) {
 		if (data.attack.wbkb == 0) {
 			//No WBKB moves
 			if (vs_mode) {
-				kb = VSKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = VSKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			} else {
-				kb = TrainingKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = TrainingKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			}
 			kb.addModifier(data.attacker.modifier.kb_dealt);
 			kb.addModifier(data.target.modifier.kb_received);
 		} else {
 			//WBKB move
 			if (vs_mode) {
-				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			} else {
-				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			}
 			kb.addModifier(data.target.modifier.kb_received);
 		}
@@ -2733,18 +2734,18 @@ function calculateShieldAdvantage(data, res) {
 		if (data.attack.wbkb == 0) {
 			//No WBKB moves
 			if (vs_mode) {
-				kb = VSKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = VSKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			} else {
-				kb = TrainingKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = TrainingKB(data.target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			}
 			kb.addModifier(data.attacker.modifier.kb_dealt);
 			kb.addModifier(data.target.modifier.kb_received);
 		} else {
 			//WBKB move
 			if (vs_mode) {
-				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			} else {
-				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+				kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 			}
 			kb.addModifier(data.target.modifier.kb_received);
 		}
@@ -3014,18 +3015,18 @@ function getDistance(data, target_percent) {
 	if (data.attack.wbkb == 0) {
 		//No WBKB moves
 		if (vs_mode) {
-			kb = VSKB(target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			kb = VSKB(target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.stale_queue, data.attack.ignore_staleness, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 		} else {
-			kb = TrainingKB(target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			kb = TrainingKB(target_percent + preLaunchDamage, base_damage, damage, data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.kbg, data.attack.bkb, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 		}
 		kb.addModifier(data.attacker.modifier.kb_dealt);
 		kb.addModifier(data.target.modifier.kb_received);
 	} else {
 		//WBKB move
 		if (vs_mode) {
-			kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, target_percent, damage, data.attacker_percent, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 		} else {
-			kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, di, data.modifiers.launch_rate);
+			kb = WeightBasedKB(data.attack.set_weight ? 100 : data.target.attributes.weight, data.attack.bkb, data.attack.wbkb, data.attack.kbg, data.target.attributes.gravity * data.target.modifier.gravity, data.target.attributes.fall_speed * data.target.modifier.fall_speed, r, target_percent, damage, 0, data.attack.angle, data.attack.aerial_opponent, data.attack.windbox, electric, data.attack.set_weight, di, data.modifiers.launch_rate);
 		}
 		kb.addModifier(data.target.modifier.kb_received);
 	}
