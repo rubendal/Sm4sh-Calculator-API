@@ -601,6 +601,77 @@ class Move {
 		//Check if move can be used in the calculator
 		if (isNaN(this.base_damage) && isNaN(this.angle) && isNaN(this.bkb) && isNaN(this.kbg))
 			this.valid = false;
+
+		//New data
+		this.pikminColor = null;
+
+		this.updateMoveData = function () {
+			if (this.character == "Olimar") {
+				if (this.name.includes("Fsmash") || this.name.includes("Dsmash") || this.name.includes("Usmash") || this.name.includes("Uair") || this.name.includes("Dair")
+					|| this.name.includes("Fair") || this.name.includes("Bair") || this.name.includes("Uthrow")) {
+
+					if (this.moveName == "Dsmash (Purple Pikmin, Late)") {
+						this.pikminColor = "Purple";
+					} else {
+						switch (this.hitbox_no) {
+							case 0:
+								this.pikminColor = "Red";
+								break;
+							case 1:
+								this.pikminColor = "Yellow";
+								break;
+							case 2:
+								this.pikminColor = "Blue";
+								break;
+							case 3:
+								this.pikminColor = "White";
+								break;
+							case 4:
+								this.pikminColor = "Purple";
+								break;
+						}
+					}
+					//Apply damage multipliers
+					switch (this.pikminColor) {
+						case "Red":
+							if (this.throw) {
+								this.base_damage *= 0.8;
+							} else {
+								this.base_damage *= 1.2;
+							}
+							this.base_damage = +this.base_damage.toFixed(1);
+							break;
+						case "Yellow":
+
+							break;
+						case "Blue":
+							if (this.throw) {
+								this.base_damage *= 1.6;
+							}
+							this.base_damage = +this.base_damage.toFixed(1);
+							break;
+						case "White":
+							if (!this.throw) {
+								this.base_damage *= 0.8;
+							}
+							this.base_damage = +this.base_damage.toFixed(1);
+							break;
+						case "Purple":
+							if (!this.throw) {
+								this.base_damage *= 1.4;
+							}
+							this.base_damage = +this.base_damage.toFixed(1);
+							break;
+					}
+
+					if (this.pikminColor != null) {
+						this.name = this.moveName + " (" + this.pikminColor + ")";
+					}
+				}
+			}
+
+			return this;
+		}
 	}
 };
 
@@ -683,6 +754,7 @@ function getMoveset(name, callback) {
 								if (!m.grab && m.valid) {
 									delete m.valid;
 									m.character = getCharacterNameFromId(move.OwnerId);
+									m.updateMoveData();
 									moves.push(m);
 									count++;
 								}
@@ -728,6 +800,7 @@ function getMovesetFromLocalFiles(name, callback) {
 					if (!m.grab && m.valid) {
 						delete m.valid;
 						m.character = getCharacterNameFromId(move.OwnerId);
+						m.updateMoveData();
 						moves.push(m);
 						count++;
 					}
@@ -775,6 +848,7 @@ function getMove(id, callback) {
 						if (!m.grab && m.valid) {
 							delete m.valid;
 							m.character = getCharacterNameFromId(move.OwnerId);
+							m.updateMoveData();
 							moves.push(m);
 							count++;
 						}
@@ -814,6 +888,7 @@ function getMoveFromLocalFiles(id, callback) {
 				if (!m.grab && m.valid && m.api_id == id) {
 					delete m.valid;
 					m.character = getCharacterNameFromId(move.OwnerId);
+					m.updateMoveData();
 					moves.push(m);
 					count++;
 				}
@@ -861,6 +936,7 @@ function getMoves(callback) {
 							if (!m.grab && m.valid) {
 								delete m.valid;
 								m.character = getCharacterNameFromId(move.OwnerId);
+								m.updateMoveData();
 								moves.push(m);
 								count++;
 							}
@@ -902,6 +978,7 @@ function getMovesFromLocalFiles(callback) {
 				if (!m.grab && m.valid) {
 					delete m.valid;
 					m.character = getCharacterNameFromId(move.OwnerId);
+					m.updateMoveData();
 					moves.push(m);
 					count++;
 				}
