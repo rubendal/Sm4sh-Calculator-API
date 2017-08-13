@@ -5,6 +5,13 @@ function loadJSON(file) {
 	return require(file.replace(".json", ""));
 }
 
+var effects = [
+	{ id: 0, name: "None/Other" },
+	{ id: 3, name: "Electric" },
+	{ id: 14, name: "Flower" },
+	{ id: 20, name: "Paralyze" }
+];
+
 var parameters = {
 	di: 0.17,
 	lsi_max: 1.095,
@@ -154,15 +161,6 @@ function StaleNegation(queue, ignoreStale) {
 	return s;
 }
 
-function ElectricMove(value) {
-	switch (value) {
-		case "electric":
-			return true;
-		case "none":
-			return false;
-	}
-	return false;
-}
 
 function Hitstun(kb, windbox, electric, ignoreReeling) {
 	if (windbox) {
@@ -175,7 +173,7 @@ function Hitstun(kb, windbox, electric, ignoreReeling) {
 		}
 	}
 	//Electric moves deal +1 hitstun https://twitter.com/Meshima_/status/786780420817899521
-	if (ElectricMove(electric)) {
+	if (electric) {
 		hitstun++;
 	}
 	if (hitstun < 0) {
@@ -190,7 +188,7 @@ function LumaHitstun(kb, windbox, electric) {
 	}
 	var hitstun = Math.floor(kb * 0.27) - 1;
 	//Electric moves deal +1 hitstun https://twitter.com/Meshima_/status/786780420817899521
-	if (ElectricMove(electric)) {
+	if (electric) {
 		hitstun++;
 	}
 	if (hitstun < 0) {
@@ -247,7 +245,7 @@ function HitstunCancel(kb, launch_speed_x, launch_speed_y, angle, windbox, elect
 	var aerial = false;
 	var launch_speed = { 'x': launch_speed_x, 'y': launch_speed_y };
 	var decay = { 'x': parameters.decay * Math.cos(angle * Math.PI / 180), 'y': parameters.decay * Math.sin(angle * Math.PI / 180) };
-	var ec = ElectricMove(electric) ? 1 : 0;
+	var ec = electric ? 1 : 0;
 	for (var i = 0; i < hitstun; i++) {
 		if (launch_speed.x != 0) {
 			var x_dir = launch_speed.x / Math.abs(launch_speed.x);
@@ -289,7 +287,11 @@ function HitstunCancel(kb, launch_speed_x, launch_speed_y, angle, windbox, elect
 }
 
 function Hitlag(base_damage, hitlag_mult, electric, crouch) {
-	var h = Math.floor((((base_damage * parameters.hitlag.mult + parameters.hitlag.constant) * electric) * hitlag_mult) * crouch) - 1;
+	var electric_mult = 1;
+	if (electric) {
+		electric_mult = 1.5;
+	}
+	var h = Math.floor((((base_damage * parameters.hitlag.mult + parameters.hitlag.constant) * electric_mult) * hitlag_mult) * crouch) - 1;
 	if (h > 30) {
 		return 30;
 	}
@@ -297,25 +299,6 @@ function Hitlag(base_damage, hitlag_mult, electric, crouch) {
 		return 0;
 	}
 	return h;
-}
-
-function ParalyzerHitlag(base_damage, hitlag_mult, crouch) {
-	var h = Math.floor(((base_damage * parameters.hitlag.mult + parameters.paralyzer.constant)) * hitlag_mult * crouch * parameters.paralyzer.mult);
-	if (h < 0) {
-		return 0;
-	}
-	return h;
-}
-
-function ParalysisTime(kb, base_damage, hitlag_mult, crouch) {
-	var p = Math.floor((((base_damage * parameters.hitlag.mult + parameters.paralyzer.constant)) * hitlag_mult) * crouch * parameters.paralyzer.mult * kb);
-	if (p > 76) {
-		return 76;
-	}
-	if (p < 0) {
-		return 0;
-	}
-	return p;
 }
 
 function ChargeSmash(base_damage, frames, megaman_fsmash, witch_time) {
@@ -395,6 +378,30 @@ function LaunchSpeed(kb) {
 
 function HitAdvantage(hitstun, hitframe, faf) {
 	return hitstun - (faf - (hitframe + 1));
+}
+
+//Effect formulas
+function ParalyzerHitlag(base_damage, hitlag_mult, crouch) {
+	var h = Math.floor(((base_damage * parameters.hitlag.mult + parameters.paralyzer.constant)) * hitlag_mult * crouch * parameters.paralyzer.mult);
+	if (h < 0) {
+		return 0;
+	}
+	return h;
+}
+
+function ParalysisTime(kb, base_damage, hitlag_mult, crouch) {
+	var p = Math.floor((((base_damage * parameters.hitlag.mult + parameters.paralyzer.constant)) * hitlag_mult) * crouch * parameters.paralyzer.mult * kb);
+	if (p > 76) {
+		return 76;
+	}
+	if (p < 0) {
+		return 0;
+	}
+	return p;
+}
+
+function FlowerTime(damage) {
+	return Math.min(Math.floor(20 + (damage * 40)), 3000);
 }
 
 //Launch visualizer formulas
@@ -2079,16 +2086,6 @@ function HitlagCrouch(value) {
 	return 1;
 }
 
-function HitlagElectric(value) {
-	switch (value) {
-		case "electric":
-			return 1.5;
-		case "none":
-			return 1;
-	}
-	return 1;
-}
-
 var stages = loadJSON("../Data/Stages/legalstagedata.json");
 var allstages = loadJSON("../Data/Stages/allstagedata.json");
 
@@ -2208,8 +2205,6 @@ function process(data, res) {
 		data.attack.shield_damage = 0;
 	if (typeof data.attack.set_weight == "undefined")
 		data.attack.set_weight = false;
-	if (typeof data.attack.paralyzer == "undefined")
-		data.attack.paralyzer = false;
 	if (typeof data.attack.aerial_opponent == "undefined")
 		data.attack.aerial_opponent = false;
 	if (typeof data.attack.ignore_staleness == "undefined")
@@ -2228,6 +2223,21 @@ function process(data, res) {
 		data.attack.unblockable = false;
 	if (typeof data.attack.charged_frames == "undefined")
 		data.attack.charged_frames = 0;
+	if (typeof data.attack.effect == "undefined")
+		data.attack.effect = "None/Other";
+	if (data.attack.effect == null)
+		data.attack.effect = "None/Other";
+	if (typeof data.attack.effect == "number") {
+		var found = false;
+		for (var i = 0; i < effects.length; i++) {
+			if (effects[i].id == data.attack.effect) {
+				data.attack.effect = effects[i].name;
+				found = true;
+			}
+		}
+		if (!found)
+			data.attack.effect = "None/Other";
+	}
 
 	if (typeof data.modifiers == "undefined")
 		data.modifiers = {};
@@ -2241,8 +2251,6 @@ function process(data, res) {
 			data.modifiers.no_di = true;
 	if (typeof data.modifiers.crouch_cancel == "undefined")
 		data.modifiers.crouch_cancel = false;
-	if (typeof data.modifiers.electric_attack == "undefined")
-		data.modifiers.electric_attack = false;
 	if (typeof data.modifiers.interrupted_smash_charge == "undefined")
 		data.modifiers.interrupted_smash_charge = false;
 	if (typeof data.modifiers.grounded_meteor == "undefined")
@@ -2410,7 +2418,7 @@ function calculate(data,res) {
 		preLaunchDamage *= data.attacker.modifier.damage_dealt;
 		preLaunchDamage *= data.target.modifier.damage_taken;
 		var crouch = 1;
-		var electric = "none";
+		var electric = false;
 		var r = 1;
 
 		if (data.modifiers.crouch_cancel) {
@@ -2420,9 +2428,7 @@ function calculate(data,res) {
 			r = 1.2;
 		}
 
-		if (data.modifiers.electric_attack) {
-			electric = "electric";
-		}
+		electric = data.attack.effect.toLowerCase() == "electric";
 
 		var di = data.modifiers.di;
 		if (data.modifiers.no_di) {
@@ -2459,17 +2465,21 @@ function calculate(data,res) {
 
 		var kb_results = {};
 
-		var hc = HitstunCancel(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.angle, data.attack.windbox, HitlagElectric(electric));
+		var hc = HitstunCancel(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.angle, data.attack.windbox, electric);
 
 		kb_results.damage = vs_mode ? +StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness).toFixed(6) : +damage.toFixed(6);
-		if (!data.attack.paralyzer) {
-			kb_results.attacker_hitlag = vs_mode ? Hitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), is_projectile ? 0 : data.attack.hitlag, HitlagElectric(electric), 1) : Hitlag(damage, is_projectile ? 0 : data.attack.hitlag, HitlagElectric(electric), 1);
-			kb_results.target_hitlag = vs_mode ? Hitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, HitlagElectric(electric), crouch) : Hitlag(damage, data.attack.hitlag, HitlagElectric(electric), crouch);
+		if (data.attack.effect.toLowerCase() != "paralyze") {
+			kb_results.attacker_hitlag = vs_mode ? Hitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), is_projectile ? 0 : data.attack.hitlag, electric, 1) : Hitlag(damage, is_projectile ? 0 : data.attack.hitlag, electric, 1);
+			kb_results.target_hitlag = vs_mode ? Hitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, electric, crouch) : Hitlag(damage, data.attack.hitlag, electric, crouch);
 			kb_results.paralysis_time = null;
 		} else {
 			kb_results.attacker_hitlag = vs_mode ? ParalyzerHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), is_projectile ? 0 : data.attack.hitlag, 1) : ParalyzerHitlag(damage, is_projectile ? 0 : data.attack.hitlag, 1);
 			kb_results.target_hitlag = null;
 			kb_results.paralysis_time = ParalysisTime(kb.kb, damage, data.attack.hitlag, crouch);
+		}
+		kb_results.flower_time = null;
+		if (data.attack.effect.toLowerCase() == "flower") {
+			kb_results.flower_time = FlowerTime(vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage);
 		}
 		kb_results.kb = +kb.kb.toFixed(6);
 		if (kb.di_able) {
@@ -2592,9 +2602,9 @@ function calculate(data,res) {
 						kb_results.full_shield_hp = +(50 * data.target.modifier.shield).toFixed(6);
 						kb_results.shield_break = vs_mode ? sv >= 50 * data.target.modifier.shield : s >= 50 * data.target.modifier.shield;
 					}
-					kb_results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, HitlagElectric(electric)) : ShieldHitlag(damage, data.attack.hitlag, HitlagElectric(electric));
+					kb_results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, electric) : ShieldHitlag(damage, data.attack.hitlag, electric);
 					kb_results.shield_stun = vs_mode ? ShieldStun(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.is_projectile, data.modifiers.powershield) : ShieldStun(damage, data.attack.is_projectile, data.modifiers.powershield);
-					kb_results.shield_advantage = vs_mode ? ShieldAdvantage(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, HitlagElectric(electric), data.modifiers.powershield) : ShieldAdvantage(damage, data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, HitlagElectric(electric), data.modifiers.powershield);
+					kb_results.shield_advantage = vs_mode ? ShieldAdvantage(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, electric, data.modifiers.powershield) : ShieldAdvantage(damage, data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, electric, data.modifiers.powershield);
 				}
 				else {
 					kb_results.unblockable = true;
@@ -2726,7 +2736,7 @@ function calculateShieldAdvantage(data, res) {
 		preLaunchDamage *= data.attacker.modifier.damage_dealt;
 		preLaunchDamage *= data.target.modifier.damage_taken;
 		var crouch = 1;
-		var electric = "none";
+		var electric = false;
 		var r = 1;
 
 		if (data.modifiers.crouch_cancel) {
@@ -2735,10 +2745,7 @@ function calculateShieldAdvantage(data, res) {
 		} else if (data.modifiers.interrupted_smash) {
 			r = 1.2;
 		}
-
-		if (data.modifiers.electric_attack) {
-			electric = "electric";
-		}
+		electric = data.attack.effect.toLowerCase() == "electric";
 
 		var di = data.modifiers.di;
 		if (data.modifiers.no_di) {
@@ -2823,9 +2830,9 @@ function calculateShieldAdvantage(data, res) {
 						results.full_shield_hp = +(50 * data.target.modifier.shield).toFixed(6);
 						results.shield_break = vs_mode ? sv >= 50 * data.target.modifier.shield : s >= 50 * data.target.modifier.shield;
 					}
-					results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, HitlagElectric(electric)) : ShieldHitlag(damage, data.attack.hitlag, HitlagElectric(electric));
+					results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, electric) : ShieldHitlag(damage, data.attack.hitlag, electric);
 					results.shield_stun = vs_mode ? ShieldStun(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.is_projectile, data.modifiers.powershield) : ShieldStun(damage, data.attack.is_projectile, data.modifiers.powershield);
-					results.shield_advantage = vs_mode ? ShieldAdvantage(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, HitlagElectric(electric), data.modifiers.powershield) : ShieldAdvantage(damage, data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, HitlagElectric(electric), data.modifiers.powershield);
+					results.shield_advantage = vs_mode ? ShieldAdvantage(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, electric, data.modifiers.powershield) : ShieldAdvantage(damage, data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, electric, data.modifiers.powershield);
 				}
 				else {
 					results.unblockable = true;
@@ -2891,7 +2898,7 @@ function calculatePercentFromKB(data, res) {
 		preLaunchDamage *= data.attacker.modifier.damage_dealt;
 		preLaunchDamage *= data.target.modifier.damage_taken;
 		var crouch = 1;
-		var electric = "none";
+		var electric = false;
 		var r = 1;
 
 		if (data.modifiers.crouch_cancel) {
@@ -2901,9 +2908,7 @@ function calculatePercentFromKB(data, res) {
 			r = 1.2;
 		}
 
-		if (data.modifiers.electric_attack) {
-			electric = "electric";
-		}
+		electric = data.attack.effect.toLowerCase() == "electric";
 
 		var di = data.modifiers.di;
 		if (data.modifiers.no_di) {
@@ -3007,7 +3012,7 @@ function getDistance(data, target_percent) {
 	preLaunchDamage *= data.attacker.modifier.damage_dealt;
 	preLaunchDamage *= data.target.modifier.damage_taken;
 	var crouch = 1;
-	var electric = "none";
+	var electric = false;
 	var r = 1;
 
 	if (data.modifiers.crouch_cancel) {
@@ -3017,9 +3022,7 @@ function getDistance(data, target_percent) {
 		r = 1.2;
 	}
 
-	if (data.modifiers.electric_attack) {
-		electric = "electric";
-	}
+	electric = data.attack.effect.toLowerCase() == "electric";
 
 	var di = data.modifiers.di;
 	if (data.modifiers.no_di) {
@@ -3204,7 +3207,6 @@ exports.gameNames = gameNames;
 exports.KHcharacters = KHcharacters;
 exports.KBModifier = KBModifier;
 exports.HitlagCrouch = HitlagCrouch;
-exports.HitlagElectric = HitlagElectric;
 exports.stages = stages;
 exports.process = process;
 exports.calculate = calculate;
@@ -3213,3 +3215,5 @@ exports.calculateKOPercent = calculateKOPercent;
 exports.calculateKOPercentBestDI = calculateKOPercentBestDI;
 exports.processMoveData = processMoveData;
 exports.calculateShieldAdvantage = calculateShieldAdvantage;
+
+exports.effects = effects;

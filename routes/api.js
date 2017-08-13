@@ -6,8 +6,6 @@ var calculator = require('../calculator/calculator');
 var kh = require('../calculator/khapi');
 
 var exampleJsonRequest = {
-	kb: 80,
-	best_di: false,
 	attacker: {
 		character: "Mario",
 		character_id: 27,
@@ -35,7 +33,7 @@ var exampleJsonRequest = {
 	},
 	attack: {
 		name: null,
-		damage: 5.5,
+		base_damage: 5.5,
 		hitlag: 1,
 		angle: 96,
 		bkb: 28,
@@ -48,20 +46,19 @@ var exampleJsonRequest = {
 		windbox: false,
 		projectile: false,
 		set_weight: false,
-		paralyzer: false,
 		aerial_opponent: false,
 		ignore_staleness: false,
 		mega_man_fsmash: false,
 		on_witch_time: false,
 		unblockable: false,
-		stale_queue: [false, false, false, false, false, false, false, false, false]
+		stale_queue: [false, false, false, false, false, false, false, false, false],
+		effect: null
 	},
 	modifiers: {
 		di: 0,
 		no_di: false,
 		launch_rate: 1,
 		grounded_meteor: false,
-		electric_attack: false,
 		crouch_cancel: false,
 		interrupted_smash_charge: false
 	},
@@ -84,6 +81,10 @@ var exampleJsonRequest = {
 //router.get('/', function (req, res) {
 //	res.json(exampleJsonRequest);
 //});
+
+router.get('/requestExample', function (req, res) {
+	res.json(exampleJsonRequest);
+});
 
 //Respond with character names
 router.get('/characters/names', function (req, res) {
@@ -222,6 +223,10 @@ router.get('/moves', function (req, res) {
 	});
 });
 
+router.get('/moves/effects', function (req, res) {
+	res.json(calculator.effects);
+});
+
 router.get('/moves/:name/names', function (req, res) {
 	var character = new calculator.Character(req.params.name);
 	kh.getMoveset(character.api_name, function (data) {
@@ -310,6 +315,8 @@ router.get('/moves/id/:api_id', function (req, res) {
 		});
 	} 
 });
+
+
 
 router.post('/calculate/kb', function (req, res) {
 	var processedData = calculator.process(req.body, res);

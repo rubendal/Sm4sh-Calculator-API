@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "title": "Sm4sh Calculator API"
   },
   "host": "calculator.kuroganehammer.com",
@@ -537,6 +537,36 @@
         }
       }
     },
+    "/moves/effects": {
+      "get": {
+        "tags": [
+          "Moves"
+        ],
+        "summary": "Get the list of move effects the calculator can use",
+        "description": "",
+        "operationId": "getMovesEffects",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "All move effects list",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MoveEffect"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/moves/{characterName}": {
       "get": {
         "tags": [
@@ -928,10 +958,6 @@
           "type": "boolean",
           "default": false
         },
-        "paralyzer": {
-          "type": "boolean",
-          "default": false
-        },
         "aerial_opponent": {
           "type": "boolean",
           "default": false
@@ -959,6 +985,11 @@
           "items": {
             "type": "boolean"
           }
+        },
+        "effect": {
+          "type": "string",
+          "default": null,
+          "description": "Can also use int, effect the move has"
         }
       }
     },
@@ -980,10 +1011,6 @@
           "default": 1
         },
         "grounded_meteor": {
-          "type": "boolean",
-          "default": false
-        },
-        "electric_attack": {
           "type": "boolean",
           "default": false
         },
@@ -1249,6 +1276,10 @@
         },
         "luma_launched": {
           "type": "boolean"
+        },
+        "luma_hitstun": {
+          "type": "number",
+          "format": "int"
         },
         "ko": {
           "type": "boolean"
@@ -1833,6 +1864,18 @@
         "traction": {
           "type": "number",
           "format": "float"
+        }
+      }
+    },
+    "MoveEffect": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "format": "int"
+        },
+        "name": {
+          "type": "string"
         }
       }
     }
