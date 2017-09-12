@@ -8,6 +8,7 @@ function loadJSON(file) {
 var effects = [
 	{ id: 0, name: "None/Other" },
 	{ id: 3, name: "Electric" },
+	{ id: 11, name: "Bury" },
 	{ id: 14, name: "Flower" },
 	{ id: 20, name: "Paralyze" }
 ];
@@ -402,6 +403,12 @@ function ParalysisTime(kb, base_damage, hitlag_mult, crouch) {
 
 function FlowerTime(damage) {
 	return Math.min(Math.floor(20 + (damage * 40)), 3000);
+}
+
+function BuriedTime(percent, damage, kb) {
+	if (kb == 0)
+		return 0;
+	return Math.ceil(55 + (Math.min(percent + damage, 999) * 0.5) + (kb * 1.5));
 }
 
 //Launch visualizer formulas
@@ -2480,6 +2487,10 @@ function calculate(data,res) {
 		kb_results.flower_time = null;
 		if (data.attack.effect.toLowerCase() == "flower") {
 			kb_results.flower_time = FlowerTime(vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage);
+		}
+		kb_results.buried_time = null;
+		if (data.attack.effect.toLowerCase() == "bury") {
+			kb_results.buried_time = BuriedTime(data.target_percent + (vs_mode ? StaleDamage(preLaunchDamage, data.attack.stale_queue, data.attack.ignore_staleness) : preLaunchDamage), vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
 		}
 		kb_results.kb = +kb.kb.toFixed(6);
 		if (kb.di_able) {

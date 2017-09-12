@@ -989,7 +989,7 @@
         "effect": {
           "type": "string",
           "default": null,
-          "description": "Can also use int, effect the move has"
+          "description": "Effect the move has, can also use int for effect id"
         }
       }
     },
@@ -1116,6 +1116,14 @@
           "format": "int"
         },
         "paralysis_time": {
+          "type": "number",
+          "format": "int"
+        },
+        "flower_time": {
+          "type": "number",
+          "format": "int"
+        },
+        "buried_time": {
           "type": "number",
           "format": "int"
         },
