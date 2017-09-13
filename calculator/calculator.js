@@ -8,6 +8,7 @@ function loadJSON(file) {
 var effects = [
 	{ id: 0, name: "None/Other" },
 	{ id: 3, name: "Electric" },
+	{ id: 9, name: "Sleep" },
 	{ id: 11, name: "Bury" },
 	{ id: 14, name: "Flower" },
 	{ id: 20, name: "Paralyze" }
@@ -409,6 +410,13 @@ function BuriedTime(percent, damage, kb) {
 	if (kb == 0)
 		return 0;
 	return Math.ceil(55 + (Math.min(percent + damage, 999) * 0.5) + (kb * 1.5));
+}
+
+//Sleep time formula by Meshima https://twitter.com/Meshima_/status/907974009551122432
+function SleepTime(percent, damage, kb) {
+	if (kb == 0)
+		return 0;
+	return Math.ceil(60 + (Math.min(percent + damage, 999) * 1) + (kb * 25));
 }
 
 //Launch visualizer formulas
@@ -2491,6 +2499,10 @@ function calculate(data,res) {
 		kb_results.buried_time = null;
 		if (data.attack.effect.toLowerCase() == "bury") {
 			kb_results.buried_time = BuriedTime(data.target_percent + (vs_mode ? StaleDamage(preLaunchDamage, data.attack.stale_queue, data.attack.ignore_staleness) : preLaunchDamage), vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
+		}
+		kb_results.sleep_time = null;
+		if (data.attack.effect.toLowerCase() == "sleep") {
+			kb_results.sleep_time = SleepTime(data.target_percent + (vs_mode ? StaleDamage(preLaunchDamage, data.attack.stale_queue, data.attack.ignore_staleness) : preLaunchDamage), vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
 		}
 		kb_results.kb = +kb.kb.toFixed(6);
 		if (kb.di_able) {
