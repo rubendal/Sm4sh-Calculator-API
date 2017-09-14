@@ -419,6 +419,25 @@ function SleepTime(percent, damage, kb) {
 	return Math.ceil(70 + (Math.min(percent + damage, 999) * 1) + (kb * 25));
 }
 
+//Freeze time formula by Meshima https://twitter.com/Meshima_/status/908383003675471872
+function FreezeTime(damage, kb) {
+	if (kb < 52.5)
+		return 0;
+	return Math.ceil(damage * 12);
+}
+
+//Stun time formula by Meshima https://twitter.com/Meshima_/status/908383383486578688
+function StunTime(kb) {
+	return Math.ceil(121 + kb);
+}
+
+//Disable time formula by Meshima https://twitter.com/Meshima_/status/908383535265804288
+function DisableTime(percent, damage, kb) {
+	if (kb == 0)
+		return 0;
+	return Math.ceil(kb + (Math.min(percent + damage, 999) * 1.1));
+}
+
 //Launch visualizer formulas
 
 function InvertXAngle(angle) {
@@ -2483,6 +2502,7 @@ function calculate(data,res) {
 		var hc = HitstunCancel(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.angle, data.attack.windbox, electric);
 
 		kb_results.damage = vs_mode ? +StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness).toFixed(6) : +damage.toFixed(6);
+		kb_results.effect_time = null;
 		if (data.attack.effect.toLowerCase() != "paralyze") {
 			kb_results.attacker_hitlag = vs_mode ? Hitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), is_projectile ? 0 : data.attack.hitlag, electric, 1) : Hitlag(damage, is_projectile ? 0 : data.attack.hitlag, electric, 1);
 			kb_results.target_hitlag = vs_mode ? Hitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, electric, crouch) : Hitlag(damage, data.attack.hitlag, electric, crouch);
@@ -2491,18 +2511,37 @@ function calculate(data,res) {
 			kb_results.attacker_hitlag = vs_mode ? ParalyzerHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), is_projectile ? 0 : data.attack.hitlag, 1) : ParalyzerHitlag(damage, is_projectile ? 0 : data.attack.hitlag, 1);
 			kb_results.target_hitlag = null;
 			kb_results.paralysis_time = ParalysisTime(kb.kb, damage, data.attack.hitlag, crouch);
+			kb_results.effect_time = kb_results.paralysis_time;
 		}
 		kb_results.flower_time = null;
 		if (data.attack.effect.toLowerCase() == "flower") {
 			kb_results.flower_time = FlowerTime(vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage);
+			kb_results.effect_time = kb_results.flower_time;
 		}
 		kb_results.buried_time = null;
 		if (data.attack.effect.toLowerCase() == "bury") {
 			kb_results.buried_time = BuriedTime(data.target_percent + (vs_mode ? StaleDamage(preLaunchDamage, data.attack.stale_queue, data.attack.ignore_staleness) : preLaunchDamage), vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
+			kb_results.effect_time = kb_results.buried_time;
 		}
 		kb_results.sleep_time = null;
 		if (data.attack.effect.toLowerCase() == "sleep") {
 			kb_results.sleep_time = SleepTime(data.target_percent + (vs_mode ? StaleDamage(preLaunchDamage, data.attack.stale_queue, data.attack.ignore_staleness) : preLaunchDamage), vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
+			kb_results.effect_time = kb_results.sleep_time;
+		}
+		kb_results.freeze_time = null;
+		if (data.attack.effect.toLowerCase() == "freeze") {
+			kb_results.freeze_time = FreezeTime(vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
+			kb_results.effect_time = kb_results.freeze_time;
+		}
+		kb_results.stun_time = null;
+		if (data.attack.effect.toLowerCase() == "stun") {
+			kb_results.stun_time = StunTime(kb.kb);
+			kb_results.effect_time = kb_results.stun_time;
+		}
+		kb_results.disable_time = null;
+		if (data.attack.effect.toLowerCase() == "disable") {
+			kb_results.disable_time = DisableTime(data.target_percent + (vs_mode ? StaleDamage(preLaunchDamage, data.attack.stale_queue, data.attack.ignore_staleness) : preLaunchDamage), vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, kb.kb);
+			kb_results.effect_time = kb_results.disable_time;
 		}
 		kb_results.kb = +kb.kb.toFixed(6);
 		if (kb.di_able) {
