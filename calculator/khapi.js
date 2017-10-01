@@ -437,8 +437,17 @@ var chargeMoves = [
 	new ChargeData(["Dragon Fang Shot (Bite, No Charge)"], 0, 30, function (base_damage, bkb, frames) {
 		return [base_damage + (7.7 * (frames / 30)), bkb];
 	}),
-	new ChargeData(["Dragon Fang Shot (Shot, No Charge)"], 0, 28, function (base_damage, bkb, frames) {
-		return [base_damage * (1 + (1.25 * (frames / 30))), bkb + (frames * 0.65)]; //Still working on this formula
+	new ChargeData(["Dragon Fang Shot (Shot, No Charge)"], 0, 29, function (base_damage, bkb, frames) {
+		//21 and 27 frames charged have floating point precision error in-game, so they are rounded down
+		if (frames == 21 || frames == 27)
+			return [base_damage * (1 + (1.25 * (frames / 30))), Math.floor(bkb + (frames * 0.6666667)) - 1];
+		return [base_damage * (1 + (1.25 * (frames / 30))), Math.floor(bkb + (frames * 0.6666667))];
+	}, true),
+	new ChargeData(["Aura Sphere (Release from Charge)"], 0, 89, function (base_damage, bkb, frames) {
+		return [6.9 * ((90 - frames)/ 90 + (frames * 2.5 / 90)), bkb];
+	}),
+	new ChargeData(["Shadow Ball (Uncharged)"], 0, 119, function (base_damage, bkb, frames) {
+		return [base_damage + (frames * 0.1875), bkb];
 	})];
 
 class Move {
@@ -491,7 +500,7 @@ class Move {
 		this.valid = true;
 		this.smash_attack = name.includes("Fsmash") || name.includes("Usmash") || name.includes("Dsmash");
 		this.throw = name.includes("Fthrow") || name.includes("Bthrow") || name.includes("Uthrow") || name.includes("Dthrow");
-		this.chargeable = name.includes("No Charge") || name.includes("Uncharged") || (name.includes("Eruption") && !name.includes("Fully Charged")) || name == "Charge Shot" || name == "Quickdraw (Attack)";
+		this.chargeable = name.includes("No Charge") || name.includes("Uncharged") || (name.includes("Eruption") && !name.includes("Fully Charged")) || name == "Charge Shot" || name == "Quickdraw (Attack)" || name == "Aura Sphere (Release from Charge)" || name == "Shadow Ball (Uncharged)";
 		this.grab = this.name == "Standing Grab" || this.name == "Dash Grab" || this.name == "Pivot Grab";
 		this.tilt = this.name.includes("Utilt") || this.name.includes("Ftilt") || this.name.includes("Dtilt");
 		this.jab = this.name.includes("Jab");
