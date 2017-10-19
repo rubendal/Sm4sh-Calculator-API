@@ -172,6 +172,7 @@ class MoveParser {
 				var first_fkb = false;
 				var multi_bkb_wbkb = false;
 				var sbkb = 0;
+				var multi_bkb = false;
 				damage = this.base_damage.split("/");
 				angles = this.angle.split("/");
 				kbgs = this.kbg.split("/");
@@ -197,9 +198,15 @@ class MoveParser {
 						bkbs = b.trim().split("/");
 					}
 					var m = Math.max(damage.length, angles.length, kbgs.length);
+
 					if (m == fkbs.length) {
-						sbkb = bkbs[0];
 						multi_bkb_wbkb = true;
+						if (bkbs.length == fkbs.length) {
+							multi_bkb = true;
+						} else {
+							sbkb = bkbs[0];
+							multi_bkb = false;
+						}
 					}
 				} else {
 					if (this.bkb.includes("W: ")) {
@@ -261,8 +268,14 @@ class MoveParser {
 					}
 
 					if (multi_bkb_wbkb) {
-						wbkb = fkbs[set_count]
-						b = sbkb;
+						if (multi_bkb) {
+							wbkb = fkbs[set_count];
+							b = bkbs[set_count];
+						} else {
+							wbkb = fkbs[set_count];
+							b = sbkb;
+						}
+						set_count++;
 					} else {
 						if (first_fkb) {
 							if (set_count < fkbs.length) {
