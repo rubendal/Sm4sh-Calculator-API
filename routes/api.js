@@ -260,6 +260,7 @@ router.get('/moves/:name', function (req, res) {
 		if (data != null) {
 			for (var i = 0; i < data.length; i++) {
 				delete data[i].charge;
+				delete data[i].isFinishingTouch;
 			}
 			res.json(data);
 		} else {
@@ -267,6 +268,7 @@ router.get('/moves/:name', function (req, res) {
 				if (localData != null) {
 					for (var i = 0; i < localData.length; i++) {
 						delete localData[i].charge;
+						delete data[i].isFinishingTouch;
 					}
 					res.json(localData);
 				} else {
@@ -286,6 +288,7 @@ router.get('/moves/id/:api_id', function (req, res) {
 				if (data != null) {
 					for (var i = 0; i < data.length; i++) {
 						delete data[i].charge;
+						delete data[i].isFinishingTouch;
 					}
 					res.json(data);
 				}
@@ -294,6 +297,7 @@ router.get('/moves/id/:api_id', function (req, res) {
 						if (localData != null) {
 							for (var i = 0; i < localData.length; i++) {
 								delete localData[i].charge;
+								delete data[i].isFinishingTouch;
 							}
 							res.json(localData);
 						} else {

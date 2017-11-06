@@ -1038,7 +1038,7 @@ class Collision {
 }
 
 class Distance {
-	constructor(kb, x_launch_speed, y_launch_speed, hitstun, angle, di, gravity, faf, fall_speed, traction, inverseX, onSurface, position, stage, doPlot, extraFrames) {
+	constructor(kb, x_launch_speed, y_launch_speed, hitstun, angle, di, gravity, faf, fall_speed, traction, isFinishingTouch, inverseX, onSurface, position, stage, doPlot, extraFrames) {
 		this.kb = kb;
 		this.x_launch_speed = x_launch_speed;
 		this.y_launch_speed = y_launch_speed;
@@ -1051,6 +1051,7 @@ class Distance {
 		this.max_y = 0;
 		this.graph_x = 0;
 		this.graph_y = 0;
+		this.isFinishingTouch = isFinishingTouch;
 		this.inverseX = inverseX;
 		this.onSurface = onSurface;
 		this.tumble = false;
@@ -1337,9 +1338,37 @@ class Distance {
 				}
 				//Gravity
 				if (countGravity) {
-					g -= gravity;
-					fg = Math.max(g, -fall_speed);
-					character_speed.y = fg;
+					if (!this.isFinishingTouch) {
+						g -= gravity;
+						fg = Math.max(g, -fall_speed);
+						character_speed.y = fg;
+						character_speed.y = +character_speed.y.toFixed(6);
+					} else {
+						//First 22 frames
+						if (i < 22) {
+							//Set gravity to 0.087 and fall speed to 1.5
+							g -= 0.087;
+							fg = Math.max(g, -1.5);
+							character_speed.y = fg;
+							character_speed.y = +character_speed.y.toFixed(6);
+						} else {
+							if (i == 22) {
+								g = fg;
+							}
+							if (character_speed.y < -fall_speed) {
+								//Current fall speed is higher than character normal fall speed, add gravity until it reduces to fall speed
+								g += gravity;
+								fg = Math.min(g, -fall_speed);
+								character_speed.y = fg;
+								character_speed.y = +character_speed.y.toFixed(6);
+							} else {
+								g -= gravity;
+								fg = Math.max(g, -fall_speed);
+								character_speed.y = fg;
+								character_speed.y = +character_speed.y.toFixed(6);
+							}
+						}
+					}
 				} else {
 					character_speed.y = 0;
 				}
@@ -2233,6 +2262,8 @@ function process(data, res) {
 		data.attack.shield_damage = 0;
 	if (typeof data.attack.set_weight == "undefined")
 		data.attack.set_weight = false;
+	if (typeof data.attack.isFinishingTouch == "undefined")
+		data.attack.isFinishingTouch = false;
 	if (typeof data.attack.aerial_opponent == "undefined")
 		data.attack.aerial_opponent = false;
 	if (typeof data.attack.ignore_staleness == "undefined")
@@ -2384,6 +2415,7 @@ function processMoveData(data, moveList) {
 			data.attack.chargeable = moveList[i].chargeable;
 			data.attack.charge = moveList[i].charge;
 			data.attack.unblockable = moveList[i].unblockable;
+			data.attack.isFinishingTouch = moveList[i].isFinishingTouch;
 			data.attack.windbox = moveList[i].windbox;
 			data.attack.landingLag = moveList[i].landingLag;
 			data.attack.autoCancel = moveList[i].autoCancel;
@@ -2488,7 +2520,7 @@ function calculate(data,res) {
 			kb.addModifier(data.target.modifier.kb_received);
 		}
 
-		var distance = new Distance(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.hitstun, kb.angle, kb.di_change, data.target.attributes.gravity * data.target.modifier.gravity, -1, data.target.attributes.fall_speed * data.target.modifier.fall_speed, data.target.attributes.traction * data.target.modifier.traction, data.stage.inverse_x, false, data.stage.position, data.stage.stage_data, true, 0);
+		var distance = new Distance(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.hitstun, kb.angle, kb.di_change, data.target.attributes.gravity * data.target.modifier.gravity, -1, data.target.attributes.fall_speed * data.target.modifier.fall_speed, data.target.attributes.traction * data.target.modifier.traction, data.attack.isFinishingTouch, data.stage.inverse_x, false, data.stage.position, data.stage.stage_data, true, 0);
 		kb.bounce(data.modifiers.grounded_meteor);
 
 		var kb_results = {};
@@ -3110,7 +3142,7 @@ function getDistance(data, target_percent) {
 		kb.addModifier(data.target.modifier.kb_received);
 	}
 
-	return new Distance(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.hitstun, kb.angle, kb.di_change, data.target.attributes.gravity * data.target.modifier.gravity, -1, data.target.attributes.fall_speed * data.target.modifier.fall_speed, data.target.attributes.traction * data.target.modifier.traction, data.stage.inverse_x, false, data.stage.position, data.stage.stage_data, true, 0);
+	return new Distance(kb.kb, kb.horizontal_launch_speed, kb.vertical_launch_speed, kb.hitstun, kb.angle, kb.di_change, data.target.attributes.gravity * data.target.modifier.gravity, -1, data.target.attributes.fall_speed * data.target.modifier.fall_speed, data.target.attributes.traction * data.target.modifier.traction, data.attack.isFinishingTouch, data.stage.inverse_x, false, data.stage.position, data.stage.stage_data, true, 0);
 
 
 }
