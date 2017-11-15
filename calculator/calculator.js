@@ -341,12 +341,25 @@ function ShieldAdvantage(damage, hitlag, hitframe, FAF, is_projectile, electric,
 	return hitframe - (FAF - 1) + ShieldStun(damage, is_projectile, powershield) + ShieldHitlag(damage, hitlag, electric) - (is_projectile ? 0 : AttackerShieldHitlag(damage, hitlag, electric));
 }
 
+function DIAngleDeadzones(angle) {
+	var deadzone = 11;
+	if (angle <= deadzone || angle >= 360 - deadzone)
+		angle = 0;
+	else if (angle <= 90 + deadzone && angle >= 90 - deadzone)
+		angle = 90;
+	else if (angle <= 180 + deadzone && angle >= 180 - deadzone)
+		angle = 180;
+	else if (angle <= 270 + deadzone && angle >= 270 - deadzone)
+		angle = 270;
+	return angle;
+}
+
 function DI(angle, move_angle) {
 	if (angle == -1) {
 		return 0;
 	}
 	//Value was 10, however in params is 0.17 in radians, https://twitter.com/Meshima_/status/766640794807603200
-	return (parameters.di * 180 / Math.PI) * Math.sin((angle - move_angle) * Math.PI / 180);
+	return (parameters.di * 180 / Math.PI) * Math.sin((DIAngleDeadzones(angle) - move_angle) * Math.PI / 180);
 }
 
 function LSI(angle, launch_angle) {
@@ -360,10 +373,9 @@ function LSI(angle, launch_angle) {
 		return 1;
 	}
 	if (angle >= 0 && angle <= 180) {
-		return 1 + ((parameters.lsi_max - 1) * Math.sin(angle * Math.PI / 180));
+		return 1 + ((parameters.lsi_max - 1) * Math.sin(DIAngleDeadzones(angle) * Math.PI / 180));
 	}
-	return 1 + ((1 - parameters.lsi_min) * Math.sin(angle * Math.PI / 180));
-
+	return 1 + ((1 - parameters.lsi_min) * Math.sin(DIAngleDeadzones(angle) * Math.PI / 180));
 }
 
 function LaunchSpeed(kb) {
@@ -2490,7 +2502,7 @@ function calculate(data,res) {
 
 		electric = data.attack.effect.toLowerCase() == "electric";
 
-		var di = data.modifiers.di;
+		var di = DIAngleDeadzones(data.modifiers.di);
 		if (data.modifiers.no_di) {
 			di = -1;
 		}
@@ -2835,7 +2847,7 @@ function calculateShieldAdvantage(data, res) {
 		}
 		electric = data.attack.effect.toLowerCase() == "electric";
 
-		var di = data.modifiers.di;
+		var di = DIAngleDeadzones(data.modifiers.di);
 		if (data.modifiers.no_di) {
 			di = -1;
 		}
@@ -2998,7 +3010,7 @@ function calculatePercentFromKB(data, res) {
 
 		electric = data.attack.effect.toLowerCase() == "electric";
 
-		var di = data.modifiers.di;
+		var di = DIAngleDeadzones(data.modifiers.di);
 		if (data.modifiers.no_di) {
 			di = -1;
 		}
@@ -3112,7 +3124,7 @@ function getDistance(data, target_percent) {
 
 	electric = data.attack.effect.toLowerCase() == "electric";
 
-	var di = data.modifiers.di;
+	var di = DIAngleDeadzones(data.modifiers.di);
 	if (data.modifiers.no_di) {
 		di = -1;
 	}
@@ -3235,9 +3247,13 @@ function calculateKOPercentBestDI(data, res) {
 			data.modifiers.no_di = false;
 
 			var list = [];
+			var anglesDone = [];
 
-			for (var i = data.di_start; i < data.di_end; i+= data.di_step) {
-				data.modifiers.di = i;
+			for (var i = data.di_start; i < data.di_end; i += data.di_step) {
+				data.modifiers.di = DIAngleDeadzones(i);
+
+				if (anglesDone.indexOf(data.modifiers.di) != -1)
+					continue;
 
 				var r = getKOPercent(data);
 
@@ -3246,6 +3262,8 @@ function calculateKOPercentBestDI(data, res) {
 					list.push({ "di": i, "percent": +r.ko_percent.toFixed(6), "data": r });
 
 				}
+
+				anglesDone.push(data.modifiers.di);
 			}
 
 			list.sort(function (a, b) {
