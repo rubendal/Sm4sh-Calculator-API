@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "",
-    "version": "0.1.4",
+    "version": "0.2",
     "title": "Sm4sh Calculator API"
   },
   "host": "calculator.kuroganehammer.com",
@@ -797,7 +797,7 @@
         "di_step": {
           "type": "number",
           "format": "float",
-          "default": 30,
+          "default": 15,
           "description": "Step used on the iterator for di angles (min: 1, max: 90)"
         }
       }
@@ -958,6 +958,10 @@
           "type": "boolean",
           "default": false
         },
+        "isFinishingTouch": {
+          "type": "boolean",
+          "default": false
+        },
         "aerial_opponent": {
           "type": "boolean",
           "default": false
@@ -997,13 +1001,9 @@
       "type": "object",
       "properties": {
         "di": {
-          "type": "number",
-          "format": "int"
-        },
-        "no_di": {
-          "type": "boolean",
-          "default": false,
-          "description": "false is default when di is given, if di is undefined or null it is true"
+          "type": "object",
+          "$ref": "#/definitions/Point",
+          "description": "Stick position, you can use a int here instead, the calculator will calculate the stick position closest to the stick gate that represents given angle"
         },
         "launch_rate": {
           "type": "number",
@@ -1148,10 +1148,6 @@
           "format": "int"
         },
         "kb": {
-          "type": "number",
-          "format": "float"
-        },
-        "angle_with_di": {
           "type": "number",
           "format": "float"
         },

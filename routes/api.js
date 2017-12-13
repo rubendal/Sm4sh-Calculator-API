@@ -504,7 +504,7 @@ router.post('/calculate/kopercent/bestdi', function (req, res) {
 		req.body.di_step = null;
 
 	if (req.body.di_step == null)
-		req.body.di_step = 30;
+		req.body.di_step = 15;
 
 	if (req.body.di_step < 1)
 		req.body.di_step = 1;

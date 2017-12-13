@@ -51,8 +51,8 @@ var parameters = {
 };
 
 //Formulas
-function TrainingKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, angle, in_air, windbox, electric, set_weight, di, launch_rate) {
-	return new Knockback((((((((percent + damage) / 10) + (((percent + damage) * base_damage) / 20)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * r, angle, gravity, fall_speed, in_air, windbox, electric, percent + damage, set_weight, di, 1);
+function TrainingKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, angle, in_air, windbox, electric, set_weight, stick, launch_rate) {
+	return new Knockback((((((((percent + damage) / 10) + (((percent + damage) * base_damage) / 20)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * r, angle, gravity, fall_speed, in_air, windbox, electric, percent + damage, set_weight, stick, 1);
 }
 
 function Rage(percent) {
@@ -215,13 +215,13 @@ function SakuraiAngle(kb, aerial) {
 	return (kb - 60) / 0.7;
 }
 
-function VSKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, timesInQueue, ignoreStale, attacker_percent, angle, in_air, windbox, electric, set_weight, di, launch_rate) {
+function VSKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, timesInQueue, ignoreStale, attacker_percent, angle, in_air, windbox, electric, set_weight, stick, launch_rate) {
 	var s = StaleNegation(timesInQueue, ignoreStale);
-	return new Knockback((((((((percent + damage * s) / 10 + (((percent + damage * s) * base_damage * (1 - (1 - s) * 0.3)) / 20)) * 1.4 * (200 / (weight + 100))) + 18) * (kbg / 100)) + bkb)) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, percent + (damage * s), set_weight, di, launch_rate);
+	return new Knockback((((((((percent + damage * s) / 10 + (((percent + damage * s) * base_damage * (1 - (1 - s) * 0.3)) / 20)) * 1.4 * (200 / (weight + 100))) + 18) * (kbg / 100)) + bkb)) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, percent + (damage * s), set_weight, stick, launch_rate);
 }
 
-function WeightBasedKB(weight, bkb, wbkb, kbg, gravity, fall_speed, r, target_percent, damage, attacker_percent, angle, in_air, windbox, electric, set_weight, di, launch_rate) {
-	return new Knockback((((((1 + (wbkb / 2)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, target_percent + damage, set_weight, di, launch_rate);
+function WeightBasedKB(weight, bkb, wbkb, kbg, gravity, fall_speed, r, target_percent, damage, attacker_percent, angle, in_air, windbox, electric, set_weight, stick, launch_rate) {
+	return new Knockback((((((1 + (wbkb / 2)) * (200 / (weight + 100)) * 1.4) + 18) * (kbg / 100)) + bkb) * (r * Rage(attacker_percent)), angle, gravity, fall_speed, in_air, windbox, electric, target_percent + damage, set_weight, stick, launch_rate);
 }
 
 function StaleDamage(base_damage, timesInQueue, ignoreStale) {
@@ -341,41 +341,85 @@ function ShieldAdvantage(damage, hitlag, hitframe, FAF, is_projectile, electric,
 	return hitframe - (FAF - 1) + ShieldStun(damage, is_projectile, powershield) + ShieldHitlag(damage, hitlag, electric) - (is_projectile ? 0 : AttackerShieldHitlag(damage, hitlag, electric));
 }
 
-function DIAngleDeadzones(angle) {
-	var deadzone = 11;
-	if (angle <= deadzone || angle >= 360 - deadzone)
-		angle = 0;
-	else if (angle <= 90 + deadzone && angle >= 90 - deadzone)
-		angle = 90;
-	else if (angle <= 180 + deadzone && angle >= 180 - deadzone)
-		angle = 180;
-	else if (angle <= 270 + deadzone && angle >= 270 - deadzone)
-		angle = 270;
+//Formula by Arthur https://twitter.com/BenArthur_7/status/926918804466225152
+function ShieldPushback(damage, projectile, powershield) {
+	var projectileMult = projectile ? 0.5 : 1;
+	var powershieldMult = powershield ? 0.66 : 1;
+	var powershieldMult2 = powershield ? 0.15 : 1;
+
+	var pushback = ((damage * 0.58 * projectileMult * powershieldMult) + 4) * 0.09 * powershieldMult2;
+	if (pushback > 1.3)
+		pushback = 1.3;
+
+	return pushback;
+}
+
+function AttackerShieldPushback(damage, projectile = false) {
+	if (projectile)
+		return 0;
+
+	return (damage * 0.04) + 0.025;
+}
+
+function StickSensibilityPosition(value) {
+	if (value < 24 && value > -24)
+		return 0;
+	if (value > 128)
+		return 1;
+	if (value < -128)
+		return -1;
+	return value / 128;
+}
+
+function StickSensibility(value) {
+	if (value < 24 && value > -24)
+		return 0;
+	if (value > 118)
+		return 1;
+	if (value < -118)
+		return -1;
+	return value / 118;
+}
+
+function DI(stick, launchSpeed, totalLaunchSpeed) {
+	if (totalLaunchSpeed < 0.00001) //There is an if on MSC but it shouldn't happen since it requires tumble for DI to work
+		return Math.atan2(launchSpeed.Y, launchSpeed.X) * 180 / Math.PI;
+
+	if (Math.abs(Math.atan2(launchSpeed.Y, launchSpeed.X)) < parameters.di) //Cannot DI if launch angle is less than DI angle change param
+		return Math.atan2(launchSpeed.Y, launchSpeed.X) * 180 / Math.PI;
+
+	var X = StickSensibility(stick.X);
+	var Y = StickSensibility(stick.Y);
+
+	var check = Y * launchSpeed.X - X * launchSpeed.Y < 0;
+
+	var variation = Math.abs(X * launchSpeed.Y - Y * launchSpeed.X) / totalLaunchSpeed;
+
+	var di = parameters.di * variation;
+
+	var angle = 0;
+
+	if (check)
+		angle = (Math.atan2(launchSpeed.Y, launchSpeed.X) - di) * 180 / Math.PI;
+	else
+		angle = (Math.atan2(launchSpeed.Y, launchSpeed.X) + di) * 180 / Math.PI;
+
+	if (angle < 0)
+		angle += 360;
+
 	return angle;
 }
 
-function DI(angle, move_angle) {
-	if (angle == -1) {
-		return 0;
-	}
-	//Value was 10, however in params is 0.17 in radians, https://twitter.com/Meshima_/status/766640794807603200
-	return (parameters.di * 180 / Math.PI) * Math.sin((DIAngleDeadzones(angle) - move_angle) * Math.PI / 180);
-}
+function LSI(stickY, launch_angle) {
+	if (launch_angle > 65 && launch_angle < 115)
+		return 1;
+	if (launch_angle > 245 && launch_angle < 295)
+		return 1;
 
-function LSI(angle, launch_angle) {
-	if (angle == -1) {
-		return 1;
-	}
-	if (launch_angle > 65 && launch_angle < 115) {
-		return 1;
-	}
-	if (launch_angle > 245 && launch_angle < 295) {
-		return 1;
-	}
-	if (angle >= 0 && angle <= 180) {
-		return 1 + ((parameters.lsi_max - 1) * Math.sin(DIAngleDeadzones(angle) * Math.PI / 180));
-	}
-	return 1 + ((1 - parameters.lsi_min) * Math.sin(DIAngleDeadzones(angle) * Math.PI / 180));
+	var Y = StickSensibility(stickY);
+	if (Y >= 0)
+		return 1 + (parameters.lsi_max - 1) * Y;
+	return 1 - (1 - parameters.lsi_min) * -Y;
 }
 
 function LaunchSpeed(kb) {
@@ -440,6 +484,44 @@ function DisableTime(percent, damage, kb) {
 	if (kb == 0)
 		return 0;
 	return Math.ceil(kb + (Math.min(percent + damage, 999) * 1.1));
+}
+
+function PinnedTime(percent) {
+	return Math.ceil(280 + (percent * 1.5));
+}
+
+//Stick gate formulas
+
+function InsideStickGate(r, X, Y) {
+	var d = Math.sqrt(Math.pow(X, 2) + Math.pow(Y, 2));
+	return d <= r;
+}
+
+function StickAngle(X, Y) {
+	var angle = Math.atan2(Y, X) * 180 / Math.PI;
+	if (angle < 0)
+		angle += 360;
+
+	return angle;
+}
+
+function AngleToStickPosition(r, angle) {
+	if (r != 0) {
+		var x = Math.floor(r * Math.cos(angle * Math.PI / 180));
+		var y = Math.floor(r * Math.sin(angle * Math.PI / 180));
+
+		if (x < -127)
+			x = -127;
+		if (y < -127)
+			y = -127;
+		if (x > 128)
+			x = 128;
+		if (y > 128)
+			y = 128;
+
+		return { X: x, Y: y };
+	}
+	return null;
 }
 
 //Launch visualizer formulas
@@ -1719,7 +1801,7 @@ class Distance {
 };
 
 class Knockback {
-	constructor(kb, angle, gravity, fall_speed, aerial, windbox, electric, percent, set_weight, di, launch_rate) {
+	constructor(kb, angle, gravity, fall_speed, aerial, windbox, electric, percent, set_weight, stick, launch_rate) {
 		this.base_kb = kb;
 		if (this.base_kb > 2500) {
 			//this.base_kb = 2500;
@@ -1751,14 +1833,11 @@ class Knockback {
 		if (typeof this.launch_rate == "undefined") {
 			this.launch_rate = 1;
 		}
-		//if (typeof this.lsi == "undefined") {
-		//	this.lsi = 1;
-		//}
 		this.hitstun = Hitstun(this.base_kb, this.windbox, this.electric);
-		if (typeof di != "undefined") {
-			this.di = di;
+		if (typeof stick !== "undefined") {
+			this.stick = stick;
 		} else {
-			this.di = -1;
+			this.stick = { X: 0, Y: 0 };
 		}
 		this.calculate = function () {
 			this.kb = this.base_kb * this.launch_rate;
@@ -1772,18 +1851,46 @@ class Knockback {
 			if ((this.base_angle == 0 || this.base_angle == 180) && this.aerial) {
 				this.tumble = this.kb > 80 && !windbox;
 			}
-			this.di_able = this.tumble;
-			if (this.di_able) {
-				this.di_change = DI(this.di, this.angle);
-				this.angle += this.di_change;
-			}
-			this.angle_with_di = this.angle;
-			this.x = Math.abs(Math.cos(this.angle * Math.PI / 180) * this.kb);
-			this.y = Math.abs(Math.sin(this.angle * Math.PI / 180) * this.kb);
+
 			this.add_gravity_speed = parameters.gravity.mult * (this.gravity - parameters.gravity.constant);
 			if (!this.tumble || this.set_weight) {
 				this.add_gravity_speed = 0;
 			}
+
+			this.x = Math.cos(this.angle * Math.PI / 180) * this.kb;
+			this.y = Math.sin(this.angle * Math.PI / 180) * this.kb;
+			this.launch_speed = LaunchSpeed(this.kb);
+			this.horizontal_launch_speed = LaunchSpeed(this.x);
+			this.vertical_launch_speed = LaunchSpeed(this.y);
+
+			if (this.windbox && !this.aerial)
+				this.vertical_launch_speed = 0;
+
+			this.di_able = this.tumble && Math.abs(Math.atan2(this.vertical_launch_speed, this.horizontal_launch_speed)) >= parameters.di;
+			if (this.di_able) {
+
+				this.angle = DI(this.stick, { X: this.horizontal_launch_speed, Y: this.vertical_launch_speed + this.add_gravity_speed }, this.launch_speed);
+
+				this.angle_with_di = this.angle;
+
+				this.lsi = LSI(this.stick.Y, this.angle);
+
+				this.x = Math.abs(Math.cos(this.angle * Math.PI / 180) * this.kb);
+				this.y = Math.abs(Math.sin(this.angle * Math.PI / 180) * this.kb);
+				this.launch_speed = LaunchSpeed(this.kb);
+				this.launch_speed *= this.lsi;
+				this.horizontal_launch_speed = this.launch_speed * Math.cos(this.angle * Math.PI / 180);
+				this.vertical_launch_speed = this.launch_speed * Math.sin(this.angle * Math.PI / 180);
+
+				this.horizontal_launch_speed = Math.abs(this.horizontal_launch_speed);
+				this.vertical_launch_speed = Math.abs(this.vertical_launch_speed);
+
+				if (this.windbox && !this.aerial)
+					this.vertical_launch_speed = 0;
+
+			}
+
+
 			this.can_jablock = false;
 			if (this.angle == 0 || this.angle == 180 || this.angle == 360) {
 				if (this.kb != 0 && !this.windbox && !this.aerial) {
@@ -1800,32 +1907,7 @@ class Knockback {
 			if (this.angle <= 70 || this.angle >= 110) {
 				this.reeling = this.tumble && !this.windbox && this.percent >= 100;
 			}
-			this.launch_speed = LaunchSpeed(this.kb);
-			this.horizontal_launch_speed = LaunchSpeed(this.x);
-			this.vertical_launch_speed = LaunchSpeed(this.y);
 
-			if (this.tumble && !this.set_weight) {
-				var vls = this.vertical_launch_speed + this.add_gravity_speed;
-				//Gravity boost changes launch angle
-				var x_ref = Math.cos(this.angle * Math.PI / 180);
-				var y_ref = Math.sin(this.angle * Math.PI / 180);
-				this.angle = Math.atan2(vls, this.horizontal_launch_speed) * 180 / Math.PI;
-				if (x_ref < 0) {
-					this.angle = InvertXAngle(this.angle);
-				}
-				if (y_ref < 0) {
-					this.angle = InvertYAngle(this.angle);
-				}
-			}
-			if (this.tumble) {
-				this.lsi = LSI(this.di, this.angle);
-			} else {
-				this.lsi = 1;
-			}
-			this.horizontal_launch_speed *= this.lsi;
-			this.vertical_launch_speed *= this.lsi;
-			//LSI is applied only to launch speed, gravity boost isn't affected by it (even if it changes the angle)
-			this.vertical_launch_speed += this.add_gravity_speed;
 			this.hitstun = Hitstun(this.base_kb, this.windbox, this.electric);
 		};
 		this.addModifier = function (modifier) {
@@ -2314,12 +2396,9 @@ function process(data, res) {
 		data.modifiers = {};
 
 	if (typeof data.modifiers.di == "undefined")
-		data.modifiers.di = null;
-	if (typeof data.modifiers.no_di == "undefined")
-		if (data.modifiers.di != null)
-			data.modifiers.no_di = false;
-		else
-			data.modifiers.no_di = true;
+		data.modifiers.di = { X: 0, Y: 0 };
+	if (typeof data.modifiers.di == "number")
+		data.modifiers.di = AngleToStickPosition(128, data.modifiers.di);
 	if (typeof data.modifiers.crouch_cancel == "undefined")
 		data.modifiers.crouch_cancel = false;
 	if (typeof data.modifiers.interrupted_smash_charge == "undefined")
@@ -2502,10 +2581,7 @@ function calculate(data,res) {
 
 		electric = data.attack.effect.toLowerCase() == "electric";
 
-		var di = DIAngleDeadzones(data.modifiers.di);
-		if (data.modifiers.no_di) {
-			di = -1;
-		}
+		var di = data.modifiers.di;
 
 		var windbox = data.attack.windbox;
 		var is_projectile = data.attack.projectile;
@@ -2582,9 +2658,6 @@ function calculate(data,res) {
 			kb_results.effect_time = kb_results.disable_time;
 		}
 		kb_results.kb = +kb.kb.toFixed(6);
-		if (kb.di_able) {
-			kb_results.angle_with_di = +kb.angle_with_di.toFixed(6);
-		}
 		kb_results.launch_angle = +kb.angle.toFixed(6);
 		if (data.attack.angle <= 361) {
 			kb_results.kb_x = +kb.x.toFixed(6);
@@ -2650,9 +2723,11 @@ function calculate(data,res) {
 		kb_results.shield_damage = null;
 		kb_results.full_shield_hp = +(50 * data.target.modifier.shield).toFixed(6);
 		kb_results.shield_break = null;
-		kb_results.shield_hitlag = null;
-		kb_results.shield_stun = null;
+		kb_results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, electric) : ShieldHitlag(damage, data.attack.hitlag, electric);
+		kb_results.shield_stun = vs_mode ? ShieldStun(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.is_projectile, data.modifiers.powershield) : ShieldStun(damage, data.attack.is_projectile, data.modifiers.powershield);
 		kb_results.shield_advantage = null;
+		kb_results.attacker_pushback = 0;
+		kb_results.target_pushback = 0;
 
 		if ((data.shield_advantage.faf != null || data.shield_advantage.landing_frame != null) && data.shield_advantage.hit_frame != null) {
 			var faf = data.shield_advantage.faf;
@@ -2702,8 +2777,7 @@ function calculate(data,res) {
 						kb_results.full_shield_hp = +(50 * data.target.modifier.shield).toFixed(6);
 						kb_results.shield_break = vs_mode ? sv >= 50 * data.target.modifier.shield : s >= 50 * data.target.modifier.shield;
 					}
-					kb_results.shield_hitlag = vs_mode ? ShieldHitlag(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, electric) : ShieldHitlag(damage, data.attack.hitlag, electric);
-					kb_results.shield_stun = vs_mode ? ShieldStun(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.is_projectile, data.modifiers.powershield) : ShieldStun(damage, data.attack.is_projectile, data.modifiers.powershield);
+					
 					kb_results.shield_advantage = vs_mode ? ShieldAdvantage(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, electric, data.modifiers.powershield) : ShieldAdvantage(damage, data.attack.hitlag, data.shield_advantage.hit_frame, faf, data.attack.is_projectile, electric, data.modifiers.powershield);
 				}
 				else {
@@ -2711,8 +2785,14 @@ function calculate(data,res) {
 				}
 
 			}
-
 			
+		}
+
+		if (!data.attack.windbox) {
+			if (!data.attack.is_projectile)
+				kb_results.attacker_pushback = vs_mode ? +AttackerShieldPushback(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness)).toFixed(6) : AtackerShieldPushback(damage).toFixed(6);
+
+			kb_results.target_pushback = vs_mode ? +ShieldPushback(StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness), data.attack.is_projectile, data.modifiers.powershield).toFixed(6) : +(ShieldPushback(damage, data.attack.is_projectile, data.modifiers.powershield)).toFixed(6);
 		}
 
 		kb_results.luma_kb = null;
@@ -2787,6 +2867,7 @@ function calculate(data,res) {
 		res.status(400).json({
 			message: "Error processing request"
 		});
+		console.log(err);
 	}
 }
 
@@ -2847,10 +2928,7 @@ function calculateShieldAdvantage(data, res) {
 		}
 		electric = data.attack.effect.toLowerCase() == "electric";
 
-		var di = DIAngleDeadzones(data.modifiers.di);
-		if (data.modifiers.no_di) {
-			di = -1;
-		}
+		var di = data.modifiers.di;
 
 		var windbox = data.attack.windbox;
 		var is_projectile = data.attack.projectile;
@@ -3010,10 +3088,7 @@ function calculatePercentFromKB(data, res) {
 
 		electric = data.attack.effect.toLowerCase() == "electric";
 
-		var di = DIAngleDeadzones(data.modifiers.di);
-		if (data.modifiers.no_di) {
-			di = -1;
-		}
+		var di = data.modifiers.di;
 
 		var windbox = data.attack.windbox;
 		var is_projectile = data.attack.projectile;
@@ -3124,10 +3199,7 @@ function getDistance(data, target_percent) {
 
 	electric = data.attack.effect.toLowerCase() == "electric";
 
-	var di = DIAngleDeadzones(data.modifiers.di);
-	if (data.modifiers.no_di) {
-		di = -1;
-	}
+	var di = data.modifiers.di;
 
 	var windbox = data.attack.windbox;
 	var is_projectile = data.attack.projectile;
@@ -3238,32 +3310,54 @@ function calculateKOPercent(data, res) {
 	}
 }
 
+function GenerateStickPositions(start, end, step) {
+	var list = [];
+	for (var i = start; i < end; i += step) {
+		var x = Math.floor(128 * Math.cos(i * Math.PI / 180));
+		var y = Math.floor(128 * Math.sin(i * Math.PI / 180));
+
+		if (x < -127)
+			x = -127;
+		if (y < -127)
+			y = -127;
+		if (x > 128)
+			x = 128;
+		if (y > 128)
+			y = 128;
+
+		//Ignore deadzone stick positions
+		if (x != 0 && x > -24 && x < 24)
+			continue;
+
+		if (y != 0 && y > -24 && y < 24)
+			continue;
+
+		list.push({ X: x, Y: y });
+	}
+	return list;
+}
+
 function calculateKOPercentBestDI(data, res) {
 	try {
 		var results = {};
 
 		if (getKOPercent(data).ko) {
 
-			data.modifiers.no_di = false;
-
 			var list = [];
-			var anglesDone = [];
 
-			for (var i = data.di_start; i < data.di_end; i += data.di_step) {
-				data.modifiers.di = DIAngleDeadzones(i);
+			var stickList = GenerateStickPositions(data.di_start, data.di_end, data.di_step);
 
-				if (anglesDone.indexOf(data.modifiers.di) != -1)
-					continue;
+			for (var i = 0; i < stickList.length; i++) {
+				data.modifiers.di = stickList[i];
 
 				var r = getKOPercent(data);
 
 				if (r.ko) {
 
-					list.push({ "di": i, "percent": +r.ko_percent.toFixed(6), "data": r });
+					list.push({ "di": data.modifiers.di, "angle": Math.floor(StickAngle(data.modifiers.di.X, data.modifiers.di.Y)), "percent": +r.ko_percent.toFixed(6), "data": r });
 
 				}
-
-				anglesDone.push(data.modifiers.di);
+				
 			}
 
 			list.sort(function (a, b) {
@@ -3276,14 +3370,16 @@ function calculateKOPercentBestDI(data, res) {
 			});
 
 
-			results.best_di = list[0].di;
+			results.best_di_stick = list[0].di;
+			results.best_di_angle = list[0].angle;
 			results.ko_percent = list[0].percent;
 
 			results.calculations = [];
 
 			for (var i = 0; i < list.length; i++) {
 				results.calculations.push({
-					di_angle: list[i].di,
+					di_stick: list[i].di,
+					di_angle: list[i].angle,
 					ko_percent: +list[i].percent.toFixed(6)
 				});
 			}

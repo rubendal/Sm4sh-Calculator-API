@@ -19,6 +19,9 @@ API documentation can be found [here](http://calculator.kuroganehammer.com/swagg
 - Changed move autocancel data, > on KH is actually >=, changed rawValue to `&ge;`, type to ">=" and value is not reduced by 1
 - Added calculate only shield advantage
 - Added character attribute/modifier lists, stage data given by name and all moves list
+- Added isFinishingTouch flag for set gravity/fall speed calculations with Finishing Touch
+- Added Shield Pushback calculations
+- Changed DI to use stick position values, can still send angle and the calculator will calculate the position closest to the stick gate that represents the given angle
 
 ### Issues and Feedback
 
