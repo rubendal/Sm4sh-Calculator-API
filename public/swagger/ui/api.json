@@ -1406,6 +1406,10 @@
     "BestDI_KO_Response": {
       "type": "object",
       "properties": {
+        "best_di_stick": {
+          "type": "object",
+          "$ref": "#/definitions/Point"
+        },
         "best_di": {
           "type": "number",
           "format": "float"
@@ -1425,6 +1429,10 @@
     "KO_Calculation": {
       "type": "object",
       "properties": {
+        "di_stick": {
+          "type": "object",
+          "$ref": "#/definitions/Point"
+        },
         "di_angle": {
           "type": "number",
           "format": "float"

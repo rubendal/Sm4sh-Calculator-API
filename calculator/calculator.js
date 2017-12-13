@@ -3371,7 +3371,7 @@ function calculateKOPercentBestDI(data, res) {
 
 
 			results.best_di_stick = list[0].di;
-			results.best_di_angle = list[0].angle;
+			results.best_di = list[0].angle;
 			results.ko_percent = list[0].percent;
 
 			results.calculations = [];
