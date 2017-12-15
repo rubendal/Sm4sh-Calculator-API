@@ -497,7 +497,7 @@ function InsideStickGate(r, X, Y) {
 	return d <= r;
 }
 
-function StickAngle(X, Y) {
+function GetAngle(X, Y) {
 	var angle = Math.atan2(Y, X) * 180 / Math.PI;
 	if (angle < 0)
 		angle += 360;
@@ -3359,7 +3359,7 @@ function calculateKOPercentBestDI(data, res) {
 
 				if (r.ko) {
 
-					list.push({ "di": data.modifiers.di, "angle": Math.floor(StickAngle(data.modifiers.di.X, data.modifiers.di.Y)), "percent": +r.ko_percent.toFixed(6), "data": r });
+					list.push({ "di": data.modifiers.di, "angle": Math.floor(GetAngle(data.modifiers.di.X, data.modifiers.di.Y)), "percent": +r.ko_percent.toFixed(6), "data": r });
 
 				}
 				
