@@ -212,7 +212,7 @@ function SakuraiAngle(kb, aerial) {
 	if (kb == 60) {
 		return (kb - 59.9999) / 0.7
 	}
-	return (kb - 60) / 0.7;
+	return Math.min((kb - 60) / (88 - 60) * 40 + 1, 40); //https://twitter.com/BenArthur_7/status/956316733597503488
 }
 
 function VSKB(percent, base_damage, damage, weight, kbg, bkb, gravity, fall_speed, r, timesInQueue, ignoreStale, attacker_percent, angle, in_air, windbox, electric, set_weight, stick, launch_rate) {
@@ -424,6 +424,18 @@ function LSI(stickY, launch_angle) {
 
 function LaunchSpeed(kb) {
 	return kb * parameters.launch_speed;
+}
+
+function HorizontalSpeedLimit(speed) {
+	return Math.max(-100, Math.min(speed, 100));
+}
+
+function HorizontalGroundedSpeedLimit(speed) {
+	return Math.max(-17, Math.min(speed, 17));
+}
+
+function VerticalSpeedLimit(speed) {
+	return Math.max(-100, Math.min(speed, 10));
 }
 
 function HitAdvantage(hitstun, hitframe, faf) {
@@ -1863,12 +1875,20 @@ class Knockback {
 			this.horizontal_launch_speed = this.launch_speed * Math.cos(this.angle * Math.PI / 180);
 			this.vertical_launch_speed = (this.launch_speed * Math.sin(this.angle * Math.PI / 180)) + this.add_gravity_speed;
 
-			this.angle = AngleFromSpeed(this.horizontal_launch_speed, this.vertical_launch_speed);
+			if ((this.base_angle == 0 || this.base_angle == 180) && !this.aerial) {
+				this.horizontal_launch_speed = HorizontalGroundedSpeedLimit(this.horizontal_launch_speed);
+			} else {
+				this.horizontal_launch_speed = HorizontalSpeedLimit(this.horizontal_launch_speed);
+				this.angle = GetAngle(this.horizontal_launch_speed, this.vertical_launch_speed);
+			}
+
+			this.vertical_launch_speed = VerticalSpeedLimit(this.vertical_launch_speed);
 
 			if (this.windbox && !this.aerial)
 				this.vertical_launch_speed = 0;
 
 			this.di_able = this.tumble && Math.abs(Math.atan2(this.vertical_launch_speed, this.horizontal_launch_speed)) >= parameters.di;
+
 			if (this.di_able && (this.stick.X != 0 || this.stick.Y != 0)) {
 
 				this.launch_speed = Math.sqrt(Math.pow(this.horizontal_launch_speed, 2) + Math.pow(this.vertical_launch_speed, 2)); //Include gravity boost to the new launch speed (yes this only happens when stick isn't on neutral)
@@ -1879,21 +1899,21 @@ class Knockback {
 
 				this.lsi = LSI(this.stick.Y, this.angle);
 
-				this.x = Math.abs(Math.cos(this.angle * Math.PI / 180) * this.kb);
-				this.y = Math.abs(Math.sin(this.angle * Math.PI / 180) * this.kb);
 				this.launch_speed *= this.lsi;
 
 				this.horizontal_launch_speed = this.launch_speed * Math.cos(this.angle * Math.PI / 180);
 				this.vertical_launch_speed = (this.launch_speed * Math.sin(this.angle * Math.PI / 180));
 
+				this.horizontal_launch_speed = HorizontalSpeedLimit(this.horizontal_launch_speed);
+				this.vertical_launch_speed = VerticalSpeedLimit(this.vertical_launch_speed);
 
-				this.horizontal_launch_speed = Math.abs(this.horizontal_launch_speed);
-				this.vertical_launch_speed = Math.abs(this.vertical_launch_speed);
-
-				if (this.windbox && !this.aerial)
-					this.vertical_launch_speed = 0;
-				
 			}
+
+			this.x = Math.abs(Math.cos(this.angle * Math.PI / 180) * this.kb);
+			this.y = Math.abs(Math.sin(this.angle * Math.PI / 180) * this.kb);
+
+			this.horizontal_launch_speed = Math.abs(this.horizontal_launch_speed);
+			this.vertical_launch_speed = Math.abs(this.vertical_launch_speed);
 
 
 			this.can_jablock = false;
@@ -2404,6 +2424,13 @@ function process(data, res) {
 		data.modifiers.di = { X: 0, Y: 0 };
 	if (typeof data.modifiers.di == "number")
 		data.modifiers.di = AngleToStickPosition(128, data.modifiers.di);
+	if (typeof data.modifiers.no_di == "undefined")
+		if (data.modifiers.di != null)
+			data.modifiers.no_di = false;
+		else
+			data.modifiers.no_di = true;
+	if (data.modifiers.no_di)
+		data.modifiers.di = { X: 0, Y: 0 };
 	if (typeof data.modifiers.crouch_cancel == "undefined")
 		data.modifiers.crouch_cancel = false;
 	if (typeof data.modifiers.interrupted_smash_charge == "undefined")
@@ -2740,7 +2767,8 @@ function calculate(data,res) {
 			if (data.modifiers.use_landing_lag && data.attack.landingLag != null && data.attack.landing_frame != null) {
 				var landing_lag = data.attack.landingLag;
 				faf = data.shield_advantage.landing_frame + landing_lag;
-				kb_results.hit_advantage = HitAdvantage(kb.hitstun, data.shield_advantage.hit_frame, faf);
+				
+				kb_results.hit_advantage = HitAdvantage(kb.hitstun, is_projectile ? data.shield_advantage.hit_frame + Hitlag(vs_mode ? StaleDamage(damage, data.attack.stale_queue, data.attack.ignore_staleness) : damage, data.attack.hitlag, electric, crouch) : data.shield_advantage.hit_frame, faf);
 			} else if (data.modifiers.use_autocancel && data.attack.autoCancel.length > 0 && data.attack.landing_frame != null) {
 				faf = data.shield_advantage.landing_frame;
 				var i = data.shield_advantage.hit_frame;
@@ -3359,7 +3387,7 @@ function calculateKOPercentBestDI(data, res) {
 
 				if (r.ko) {
 
-					list.push({ "di": data.modifiers.di, "angle": Math.floor(GetAngle(data.modifiers.di.X, data.modifiers.di.Y)), "percent": +r.ko_percent.toFixed(6), "data": r });
+					list.push({ "di": data.modifiers.di, "angle": Math.floor(GetAngle(data.modifiers.di.X * (data.stage.inverse_x ? -1 : 1), data.modifiers.di.Y)), "percent": +r.ko_percent.toFixed(6), "data": r });
 
 				}
 				

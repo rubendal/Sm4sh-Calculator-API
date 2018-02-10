@@ -1005,6 +1005,11 @@
           "$ref": "#/definitions/Point",
           "description": "Stick position, you can use a int here instead, the calculator will calculate the stick position closest to the stick gate that represents given angle"
         },
+        "no_di": {
+          "type": "boolean",
+          "default": false,
+          "description": "In case di value is int for di angle this boolean can be used to consider it as not DI'ing or having the stick in neutral position"
+        },
         "launch_rate": {
           "type": "number",
           "format": "float",
