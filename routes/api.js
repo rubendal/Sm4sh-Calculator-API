@@ -282,42 +282,37 @@ router.get('/moves/:name', function (req, res) {
 });
 
 router.get('/moves/id/:api_id', function (req, res) {
-	if (!isNaN(parseFloat(req.params.api_id)) && isFinite(req.params.api_id)) {
-		try {
-			kh.getMove(parseInt(req.params.api_id), function (data) {
-				if (data != null) {
-					for (var i = 0; i < data.length; i++) {
-						delete data[i].charge;
-						delete data[i].isFinishingTouch;
-					}
-					res.json(data);
+	try {
+
+		kh.getMove(req.params.api_id, function (data) {
+			if (data != null) {
+				for (var i = 0; i < data.length; i++) {
+					delete data[i].charge;
+					delete data[i].isFinishingTouch;
 				}
-				else {
-					kh.getMoveFromLocalFiles(req.params.api_id, function (localData) {
-						if (localData != null) {
-							for (var i = 0; i < localData.length; i++) {
-								delete localData[i].charge;
-								delete data[i].isFinishingTouch;
-							}
-							res.json(localData);
-						} else {
-							res.status(500).json({
-								message: "Error: Invalid id"
-							});
+				res.json(data);
+			}
+			else {
+				kh.getMoveFromLocalFiles(req.params.api_id, function (localData) {
+					if (localData != null) {
+						for (var i = 0; i < localData.length; i++) {
+							delete localData[i].charge;
+							delete data[i].isFinishingTouch;
 						}
-					});
-				}
-			});
-		} catch (err) {
-			res.status(500).json({
-				message: "Error: Move not found"
-			});
-		}
-	} else {
-		res.status(500).json({
-			message: "Error: Requested id is not a number"
+						res.json(localData);
+					} else {
+						res.status(500).json({
+							message: "Error: Invalid id"
+						});
+					}
+				});
+			}
 		});
-	} 
+	} catch (err) {
+		res.status(500).json({
+			message: "Error: Move not found"
+		});
+	}
 });
 
 

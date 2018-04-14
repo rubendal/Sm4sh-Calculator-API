@@ -658,8 +658,8 @@
             "in": "path",
             "name": "moveId",
             "type": "number",
-            "format": "int",
-            "description": "KH API move id",
+            "format": "string",
+            "description": "KH API move InstanceId",
             "required": true
           }
         ],
